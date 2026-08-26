@@ -1,41 +1,36 @@
-# Data requirements
+# Data requirements and file map
 
-## Minimum viable BLP panel
+## Core BLP panel
 
-One row per bank × local market × year:
+The construction script expects annual bank observations for 1994–2025. Each year is a national demand market.
 
-| Field | Definition | Why needed |
+| Component | Required fields or concepts | External location |
 |---|---|---|
-| `market_id`, `year` | County/MSA/commuting-zone and period | Choice market |
-| `bank_id`, `owner_id` | Product and ultimate parent | Multiproduct ownership |
-| `deposits` | Deposits in the local market | Inside share |
-| `market_size` | Potential deposit dollars or households | Outside share |
-| `deposit_rate` and/or `fees` | Depositor return/cost | Endogenous price |
-| `branches` | Local branch count/access | Observed quality |
-| bank controls | size, capital, digital access, services | Demand and cost controls |
-| cost shifters | funding costs, wages, rents, regulation exposure | Supply/instruments |
-| rival characteristics | competing branch networks and predetermined traits | Candidate BLP instruments |
+| Call Reports | `cert`, report date, deposits, total loans, agricultural loans, assets, equity, income/expense items, employees | `pipeline_cache/nc1177/fdic/` |
+| FDIC Summary of Deposits | bank certificate, year, branch count and deposit geography | `pipeline_cache/nc1177/sod/branch_year/` |
+| Market-power cost inputs | loan/deposit rates, funding costs and operating-cost shifters | `pipeline_cache/nc1177/market_power/` |
+| ERS agricultural credit | lender-sector agricultural credit totals used for market size/outside option | `raw/ers/` and `pipeline_cache/nc1177/market_power/` |
+| Final BLP panel | prices, inside/outside shares, characteristics, bank type and instruments | `processed/nc1177/bank_year_market_power_inputs_1994_2025.parquet` |
 
-Enforce positive inside shares and `sum(deposits) < market_size` within every market-year. Preserve merger histories so `owner_id` reflects ownership in that year.
+The estimation requires positive shares, a valid outside share for every year, positive balances, economically valid rates, and stable bank identifiers. `agricultural_bank` must be consistently defined before sample splitting.
 
-## Dynamic extension
+## BLP instruments and characteristics
 
-Add branch openings/closures, entry/exit, loans by geography, interest income/expense, charge-offs, securities, wholesale funding, equity capital, risk-weighted assets, dividends, merger events, and local economic states. These variables identify profits, state transitions, adjustment costs, and constraints in the Bellman problem.
+The maintained random-coefficient specification uses:
 
-## Candidate U.S. sources
+- product price: agricultural-production loan rate or deposit rate;
+- observed quality/cost controls including branch access and employees per branch;
+- bank-type interactions;
+- same-type Gandhi–Houde differentiation instruments; and
+- year clustering and annual national market identifiers.
 
-- FDIC Summary of Deposits: branch deposits, locations, ownership.
-- FFIEC Call Reports / Federal Reserve NIC: bank balance sheets and organizational history.
-- RateWatch or another rate vendor: bank-product deposit rates and fees.
-- Census / BEA / BLS: households, income, employment, wages, and market controls.
-- HMDA or Call Reports: lending outcomes, with geographic limitations documented.
+Instrument validity, market-size construction, missing-rate treatment and merger/charter continuity must be frozen before final estimation.
 
-## Construction decisions to freeze before estimation
+## Dynamic-bank inputs
 
-1. Geographic market definition and annual observation date.
-2. Market-size denominator and outside option.
-3. Price convention: higher `price` must lower utility.
-4. Treatment of online banks and zero-branch products.
-5. Parent-bank consolidation and merger-year rules.
-6. Instrument set and the exclusion argument for every instrument.
+The dynamic construction additionally needs annual balance sheets, BLP-implied margins, interest income and expense, charge-offs, the federal-funds rate, USDA ERS farm income, capital ratios, deposits, wholesale funding, securities, loan maturity, regulatory requirements and taxes.
+
+The final model panel is written to `processed/nc1177/dynamic_bank_model/bank_year_dynamic_model_inputs_1994_2025.parquet`.
+
+Large source and processed files stay in Dropbox and are never committed to Git.
 

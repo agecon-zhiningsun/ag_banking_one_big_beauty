@@ -1,68 +1,54 @@
-# Model and estimation notes
+# Structural model
 
-## 1. BLP-style deposit demand
+## BLP demand and market power
 
-For bank product \(j\) in local market \(m\) and year \(t\), depositor \(i\)'s utility is
-
-\[
-u_{ijmt}=x_{jmt}'\beta-\alpha p_{jmt}+\xi_{jmt}+\mu_{ijmt}+\varepsilon_{ijmt},
-\]
-
-where \(p\) is a price-like deposit measure (for example, fees minus the deposit rate), \(x\) contains branch access and bank characteristics, \(\xi\) is unobserved quality, and \(\mu\) permits random coefficients. The repository baseline sets \(\mu=0\), giving simple logit shares
+Each year is a national product market. Bank `j`'s indirect utility is
 
 \[
-s_{jmt}=\frac{\exp(\delta_{jmt})}{1+\sum_k\exp(\delta_{kmt})}.
+u_{ijt}=x_{jt}'\beta+\alpha_i r_{jt}+\xi_{jt}+\varepsilon_{ijt},
+\qquad \alpha_i=\bar\alpha+\sigma_\alpha\nu_i.
 \]
 
-For logit demand, the price derivative is
+The maintained agricultural-production/deposit specification uses random coefficients and same-type Gandhi–Houde differentiation instruments. Bank type is agricultural versus non-agricultural. The estimation code performs the BLP contraction, IV/GMM estimation, share-derivative construction, and recovery of structural margins from the supply first-order conditions.
+
+For ownership matrix `Ω` and share Jacobian `J`, implied margins solve
 
 \[
-\frac{\partial s_j}{\partial p_k}=-\alpha s_j(\mathbf{1}\{j=k\}-s_k).
+m_t=-(\Omega_t\odot J_t')^{-1}s_t.
 \]
 
-Let \(\Omega_{jk}=1\) if products \(j\) and \(k\) have the same owner. Define \(\Delta=-\Omega\odot(\partial s/\partial p)'\). The multiproduct pricing first-order conditions imply
+The compact empirical results are in `output/tables/blp_market_power/`. Detailed bank-year estimates remain in the external processed-data store.
+
+## Bellman equation
+
+Let the bank state contain legacy loans, equity, aggregate funding and farm-income states, expected competitor rates, bank type, and other balance-sheet conditions:
 
 \[
-p-mc=\Delta^{-1}s.
+z_t=(L_t,E_t,f_t,q_t,r^L_{-j,t},r^D_{-j,t},a_j).
 \]
 
-The code reports implied markups, marginal costs, and Lerner indices. In an empirical application, estimate \((\alpha,\beta)\) using excluded cost or rival-characteristic instruments; do not treat the calibrated synthetic \(\alpha\) as an estimate.
-
-## 2. Dynamic bank problem (Bellman equation)
-
-Let the state be \(z_{jmt}=(b_{jmt},d_{jmt},\ell_{jmt},k_{jt},a_{jt},q_{mt})\): branches, deposits, loans, capital, bank productivity, and local demand conditions. A bank chooses deposit price \(p^d\), loan price \(p^\ell\), branch investment \(I\), and exit \(e\). A useful recursive formulation is
+The bank chooses its loan rate, deposit rate, and dividends. New loans and deposits follow estimated demand; reserves, securities and wholesale funding close the balance sheet. The recursive problem is
 
 \[
-V_j(z_t)=\max_{p^d_j,p^\ell_j,I_j,e_j}
-\left\{\pi_j(z_t,p^d_j,p^\ell_j)-C_I(I_j)-e_j C_E
-+\beta\,\mathbb E\left[V_j(z_{t+1})\mid z_t,p^d_j,p^\ell_j,I_j,e_j\right]\right\},
+V_j(z_t)=\max_{r^L_{jt},r^D_{jt},D_{jt}}
+\left\{\pi_j(z_t,r^L_{jt},r^D_{jt},D_{jt})
++\frac{1}{1+\rho}\,
+\mathbb E[V_j(z_{t+1})\mid z_t,r^L_{jt},r^D_{jt},D_{jt}]\right\},
 \]
 
-subject to
+subject to demand, balance-sheet feasibility, loan maturity/default, retained-earnings evolution, capital and reserve requirements, and nonnegative funding quantities. The aggregate farm state shifts agricultural loan demand and expected agricultural charge-offs.
+
+A compact profit mapping is
 
 \[
-d_{jmt}=M_{mt}s_{jmt}(p^d_t,x_t,\xi_t),\qquad
-b_{jm,t+1}=(1-\delta_b)b_{jmt}+I_{jmt},
+\pi_{jt}=r^L_{jt}L_{jt}+r^S_tS_{jt}
+-r^D_{jt}Dep_{jt}-r^W_tW_{jt}
+-C(L_{jt},Dep_{jt},a_j)-Loss_{jt}-Tax_{jt}.
 \]
 
-\[
-k_{j,t+1}=k_{jt}+\pi_{jt}-\text{dividends}_{jt},\qquad
-k_{jt}\geq \kappa\,\text{RWA}_{jt},
-\]
+Expected competitor loan and deposit rates are iterated to a fixed point. The implementation reports the equilibrium gap, Bellman residual, feasibility share, balance-sheet error, and capital-constraint violations.
 
-plus balance-sheet feasibility. One profit mapping is
+## Interpretation
 
-\[
-\pi_{jt}=r^\ell_{jt}\ell_{jt}-r^d_{jt}d_{jt}-C(d_{jt},\ell_{jt},b_{jt},a_{jt})-\text{losses}_{jt}.
-\]
-
-The static BLP estimates identify deposit-demand substitution and implied deposit-side margins. The dynamic layer additionally requires transition processes, investment/adjustment costs, loan demand, credit losses, and regulatory constraints. Estimation could use two-step CCP methods, simulated method of moments, or a nested fixed point, depending on the counterfactual.
-
-## 3. Main identification risks
-
-- Deposit rates or fees correlate with unobserved bank quality.
-- Market size and the outside option determine levels of inferred demand.
-- Branches and product availability are endogenous entry/investment choices.
-- Bank × market observations must be aggregated consistently across mergers.
-- Deposit and loan margins should not be conflated without balance-sheet costs.
+The BLP table is an empirical model output. The downturn policy table is currently illustrative, not a final estimated counterfactual. That distinction is retained in every tracked output.
 

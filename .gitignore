@@ -1,8 +1,21 @@
+# External data and local configuration
+data/
+config/data_paths.R
+
+# R / RStudio
+.Rhistory
+.RData
+.Ruserdata
+.Rproj.user/
+
+# Python
 __pycache__/
 *.py[cod]
 .venv/
-data/raw/*
-!data/raw/.gitkeep
-data/processed/*
-!data/processed/.gitkeep
+.pytest_cache/
+
+# OS/editor
+.DS_Store
+Thumbs.db
+.vscode/
 

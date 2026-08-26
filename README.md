@@ -1,38 +1,55 @@
 # AG Banking: One Big Beauty
 
-Standalone research repository for measuring local bank market power with a BLP-style differentiated-products demand system and linking the static estimates to a dynamic bank problem.
+This repository collects the structural pieces of the agricultural-banking project in one compact, reproducible package: BLP market-power estimation, dynamic-bank inputs, and a Wang-style Bellman model.
 
-## What is already here
+Its layout follows the Dropbox reference repository `/ag-lending-competition`:
 
-- A reproducible synthetic baseline with bank-market-year observations.
-- BLP/logit market-power calculations: demand derivatives, multi-product ownership, implied markups, marginal costs, Lerner indices, and HHI.
-- A Bellman equation for dynamic branching, deposit pricing, lending, and exit.
-- A field-level checklist for replacing the synthetic panel with empirical data.
+- `code/01_download/`: data acquisition (documented here; source scripts remain in the parent project);
+- `code/02_clean/`: source cleaning (documented here; source scripts remain in the parent project);
+- `code/03_construct/`: BLP panels and dynamic-model inputs;
+- `code/04_analysis/`: BLP estimation and the Bellman model;
+- `output/tables/`: small, Git-tracked empirical results;
+- `output/figures/`: Git-tracked figures;
+- `docs/`: model and data documentation; and
+- `config/`: collaborator-specific external data path.
 
-The current numbers are **method-validation results from simulated data**, not estimates about actual banks. See `results/blp_market_power_summary.csv` after running the pipeline.
+## Data storage
 
-## Quick start
+Large datasets stay outside Git. On the primary machine they live at:
 
-```powershell
-python -m venv .venv
-.venv\Scripts\Activate.ps1
-pip install -r requirements.txt
-python src/run_blp_market_power.py
-```
+`C:/Users/zhini/Dropbox/ag lending data`
 
-The script writes:
+Copy `config/data_paths_example.R` to `config/data_paths.R` and set `data_root`. The local file is ignored by Git. The repository intentionally has no tracked `data/` directory.
 
-- `data/processed/synthetic_bank_market_panel.csv`
-- `results/blp_product_results.csv`
-- `results/blp_market_power_summary.csv`
+Expected external layout:
 
-## Empirical workflow
+- `raw/`: downloaded source files;
+- `pipeline_cache/nc1177/`: cleaned inputs and rebuild intermediates; and
+- `processed/nc1177/`: final estimation panels and detailed model output.
 
-1. Construct bank × local-market × year deposit products and an outside-option share.
-2. Estimate demand, preferably with instruments for endogenous deposit prices/rates.
-3. Form the demand Jacobian and ownership matrix in each market-year.
-4. Recover markups from banks' multiproduct first-order conditions.
-5. Use recovered profits and transition estimates in the dynamic model.
+## Reproduction order
 
-Model notation and identification are in [docs/model.md](docs/model.md); required inputs and proposed sources are in [docs/data_requirements.md](docs/data_requirements.md).
+1. Run the upstream download and cleaning stages in `/ag-lending-competition` if the external data store is not already populated.
+2. Run `code/03_construct/07_construct_market_power_panels.R`.
+3. Install `code/04_analysis/requirements.txt`, then run `code/04_analysis/02_estimate_ag_production_deposit_rc_blp.py`.
+4. Run `code/03_construct/06_construct_dynamic_bank_model_inputs.R`.
+5. Run `code/04_analysis/03_wang_full_dynamic_bank_model.R`.
+
+## Current BLP results
+
+The tracked agricultural-production BLP estimates cover 1994–2025 and are empirical outputs copied from the reference project, not synthetic examples.
+
+| Sample | Observations | Banks | Mean structural margin | Median structural margin | Converged |
+|---|---:|---:|---:|---:|---|
+| Non-agricultural banks | 53,812 | 5,626 | 0.05353 | 0.01124 | Yes |
+| Agricultural banks | 45,226 | 3,114 | 0.03393 | 0.01246 | Yes |
+| All banks pooled | 99,038 | 7,248 | 0.04422 | 0.01185 | Yes |
+
+See `output/tables/blp_market_power/ag_production_summary.csv` for the full compact table.
+
+## Dynamic model status
+
+The repository includes the full Wang-style balance-sheet Bellman implementation and tracked diagnostics. The policy results remain labeled `illustrative_not_estimated`; the parameter table distinguishes initial SMD parameters, statutory/direct inputs, stress calibrations, and descriptive reduced-form quantities.
+
+See `docs/model.md` for the Bellman equation and `docs/data_requirements.md` for the complete input map.
 
