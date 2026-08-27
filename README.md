@@ -41,11 +41,11 @@ The tracked agricultural-production BLP estimates cover 1994–2025 and are empi
 
 | Sample | Observations | Banks | Mean structural margin | Median structural margin | Converged |
 |---|---:|---:|---:|---:|---|
-| Non-agricultural banks | 53,812 | 5,626 | 0.05353 | 0.01124 | Yes |
-| Agricultural banks | 45,226 | 3,114 | 0.03393 | 0.01246 | Yes |
-| All banks pooled | 99,038 | 7,248 | 0.04422 | 0.01185 | Yes |
+| Non-agricultural banks | 53,805 | 5,626 | 0.02379 | 0.00823 | Yes |
+| Agricultural banks | 45,223 | 3,114 | 0.02023 | 0.00887 | Yes |
+| All banks pooled | 99,028 | 7,248 | 0.02213 | 0.00856 | Yes |
 
-See `output/tables/blp_market_power/ag_production_summary.csv` for the full compact table.
+See `output/tables/blp_market_power/ag_production_summary.csv` for the full compact table. These are provisional structural estimates: the current Hansen test has `p = 0.0113`, and the weighting and parameter-covariance matrices are poorly conditioned. The repository therefore preserves the estimates while flagging instrument/specification refinement as required before causal interpretation.
 
 ## Dynamic model status
 
@@ -53,3 +53,7 @@ The repository includes the full Wang-style balance-sheet Bellman implementation
 
 See `docs/model.md` for the Bellman equation and `docs/data_requirements.md` for the complete input map.
 
+## Research extensions
+
+- `docs/wang_paper_recheck.md` compares this implementation with Wang, Whited, Wu, and Xiao.
+- `docs/one_big_beautiful_bill_design.md` maps the 2025 law into estimable agricultural-credit shocks and counterfactuals.

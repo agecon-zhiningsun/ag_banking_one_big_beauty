@@ -34,3 +34,6 @@ The final model panel is written to `processed/nc1177/dynamic_bank_model/bank_ye
 
 Large source and processed files stay in Dropbox and are never committed to Git.
 
+## Post-2025 policy extension
+
+For the One Big Beautiful Bill analysis, add pre-law county-crop acreage weights, statutory ARC/PLC reference-price changes, added-base-acre allocations, marketing-assistance loan rates, RMA premium subsidies/indemnities, FSA/CCC direct and guaranteed credit, and post-2025 bank outcomes. Construct separate predetermined exposure measures for income support, insurance, government credit and tax incentives; do not collapse them into a single post-law indicator.

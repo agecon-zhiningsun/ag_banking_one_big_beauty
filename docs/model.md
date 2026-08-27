@@ -9,7 +9,7 @@ u_{ijt}=x_{jt}'\beta+\alpha_i r_{jt}+\xi_{jt}+\varepsilon_{ijt},
 \qquad \alpha_i=\bar\alpha+\sigma_\alpha\nu_i.
 \]
 
-The maintained agricultural-production/deposit specification uses random coefficients and same-type Gandhi–Houde differentiation instruments. Bank type is agricultural versus non-agricultural. The estimation code performs the BLP contraction, IV/GMM estimation, share-derivative construction, and recovery of structural margins from the supply first-order conditions.
+The maintained agricultural-production/deposit specification uses random coefficients and same-type Gandhi–Houde differentiation instruments. Bank type is agricultural versus non-agricultural. The current implementation requires four quarters per bank-year, clusters inference by bank (`CERT`), uses 20 simulation draws per market, and removes six collinear differentiation instruments. It performs the BLP contraction, IV/GMM estimation, share-derivative construction, and recovery of structural margins from the supply first-order conditions.
 
 For ownership matrix `Ω` and share Jacobian `J`, implied margins solve
 
@@ -17,7 +17,7 @@ For ownership matrix `Ω` and share Jacobian `J`, implied margins solve
 m_t=-(\Omega_t\odot J_t')^{-1}s_t.
 \]
 
-The compact empirical results are in `output/tables/blp_market_power/`. Detailed bank-year estimates remain in the external processed-data store.
+The compact empirical results are in `output/tables/blp_market_power/`. Detailed bank-year estimates remain in the external processed-data store. Convergence alone is not sufficient validation: the current Hansen statistic is 8.965 on 2 degrees of freedom (`p = 0.0113`), while matrix condition numbers are large. These diagnostics motivate instrument reduction, scaling, alternative moments, and sensitivity analysis.
 
 ## Bellman equation
 
@@ -27,13 +27,13 @@ Let the bank state contain legacy loans, equity, aggregate funding and farm-inco
 z_t=(L_t,E_t,f_t,q_t,r^L_{-j,t},r^D_{-j,t},a_j).
 \]
 
-The bank chooses its loan rate, deposit rate, and dividends. New loans and deposits follow estimated demand; reserves, securities and wholesale funding close the balance sheet. The recursive problem is
+Following equation (24) in Wang et al., the bank chooses its loan rate, deposit rate, government securities, non-reservable borrowing, reserves, and dividends. New loans and deposits follow estimated demand; reserves, securities and wholesale funding close the balance sheet. The recursive problem is
 
 \[
-V_j(z_t)=\max_{r^L_{jt},r^D_{jt},D_{jt}}
-\left\{\pi_j(z_t,r^L_{jt},r^D_{jt},D_{jt})
+V_j(z_t)=\max_{r^L_{jt},r^D_{jt},G_{jt},N_{jt},R_{jt},C_{j,t+1}}
+\left\{C_{j,t+1}
 +\frac{1}{1+\rho}\,
-\mathbb E[V_j(z_{t+1})\mid z_t,r^L_{jt},r^D_{jt},D_{jt}]\right\},
+\mathbb E[V_j(z_{t+1})\mid z_t,\text{choices}_{jt}]\right\},
 \]
 
 subject to demand, balance-sheet feasibility, loan maturity/default, retained-earnings evolution, capital and reserve requirements, and nonnegative funding quantities. The aggregate farm state shifts agricultural loan demand and expected agricultural charge-offs.
@@ -50,5 +50,4 @@ Expected competitor loan and deposit rates are iterated to a fixed point. The im
 
 ## Interpretation
 
-The BLP table is an empirical model output. The downturn policy table is currently illustrative, not a final estimated counterfactual. That distinction is retained in every tracked output.
-
+The BLP table is an empirical model output with material identification warnings. The current R dynamic program solves a discretized Wang-style Bellman problem but does not yet perform Wang et al.'s full simulated-minimum-distance estimation. Its downturn policy table is illustrative, not a final estimated counterfactual. That distinction is retained in every tracked output.

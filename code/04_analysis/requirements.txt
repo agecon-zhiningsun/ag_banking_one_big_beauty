@@ -2,5 +2,5 @@ pyblp==1.2.0
 pyarrow==25.0.1
 pandas
 numpy
-
+scipy
 
