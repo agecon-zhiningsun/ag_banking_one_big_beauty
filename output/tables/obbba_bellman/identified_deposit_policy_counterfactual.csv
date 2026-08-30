@@ -1,0 +1,7 @@
+scenario,bank_type,banks,aggregate_deposits_thousands,aggregate_deposit_change_thousands,deposit_weighted_growth,mean_bank_deposit_growth,median_bank_deposit_growth,mean_deposit_asset_ratio_change
+A_no_policy,nonagricultural_banks,3016,17761462952,0,0,0,0,0
+A_no_policy,agricultural_banks,940,266490145,0,0,0,0,0
+A_no_policy,unmatched_bank_characteristics,81,0,0,0,0,0,0
+B_obbba_current_market_power,nonagricultural_banks,3016,17761907559.1437,444607.143679602,2.50321240362432e-05,0.000189928426653478,2.27758313092257e-05,0.000161172187017945
+B_obbba_current_market_power,agricultural_banks,940,266774419.238245,284274.238244706,0.00106673452500357,0.00132427151939114,0.00103436022505592,0.00112059348668359
+B_obbba_current_market_power,unmatched_bank_characteristics,81,0,0,0,0.000497987696562259,2.87603533889345e-05,

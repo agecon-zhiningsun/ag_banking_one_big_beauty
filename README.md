@@ -45,6 +45,7 @@ Expected external layout:
 5. Run `code/03_construct/12_construct_obbba_exposure.R`.
 6. Run `code/04_analysis/12_simulate_obbba_arc_plc_payments.R`.
 7. Run `code/04_analysis/13_prepare_obbba_bellman_counterfactuals.R`.
+8. Run `code/04_analysis/14_run_identified_deposit_policy_counterfactual.R`.
 
 This module keeps county-market and bank designs distinct. The county design
 relates policy payments to total deposits across all branches in a county. The
@@ -55,11 +56,18 @@ all bank depositors are farmers. The first-pass fixed-effect estimates in
 The FSA recipient files cover calendar disbursements from 2014 through 2025;
 recipient names and addresses remain outside Git, and only county-program
 aggregates enter the analytical panels. ARC/PLC, MFP, CFAP and BEA total
-government payments are estimated separately. OBBBA payment/deposit scenarios
-are in `output/tables/obbba_simulation/`.
+government payments are estimated separately. The OBBBA counterfactual uses
+only the positive, statistically significant total-FSA coefficient. It reports
+the simulated percentage increase in total FSA payments and applies the
+estimated retention coefficient to the corresponding payment-to-deposit shock;
+it does not use the insignificant program-family coefficients. OBBBA
+payment/deposit scenarios are in `output/tables/obbba_simulation/`.
 Bellman-ready bank shock inputs and the counterfactual registry are in
 `output/tables/obbba_bellman/`; borrower-demand and default-risk policy shocks
 remain to be estimated before the full dynamic policy experiment is identified.
+The identified deposit-only comparison of no policy (A) with OBBBA under current
+market power (B) is reported in
+`output/tables/obbba_bellman/identified_deposit_policy_counterfactual.csv`.
 
 ## Current BLP results
 

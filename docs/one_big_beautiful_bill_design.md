@@ -48,7 +48,7 @@ bank's prior-year SOD county deposit shares. Call Report agricultural and total
 loans are located at the bank, not at the borrower county, so this is a
 service-area exposure and must be labeled accordingly.
 
-Estimate program families separately:
+Estimate program families separately as diagnostics:
 
 - ARC/PLC identifies recurring commodity-safety-net exposure.
 - MFP identifies an exceptional trade-assistance shock.
@@ -56,16 +56,20 @@ Estimate program families separately:
 - BEA total government payments provide the long county panel and an omnibus
   robustness measure, but should not replace the program-specific estimates.
 
-Pooling MFP and CFAP into ARC/PLC without separate indicators is inappropriate:
-their timing, eligibility and spending motives differ. A pooled total-payment
-coefficient is useful only as a secondary reduced-form calibration.
+Pooling MFP and CFAP into ARC/PLC without separate indicators would obscure
+their different timing and eligibility. However, the policy counterfactual can
+use the separately estimated total-FSA coefficient when the empirical question
+is the response to the overall dollar flow rather than a program-specific
+behavioral response.
 
-The long BEA total-payment estimate is negative, while the separate FSA
-program-family estimates are imprecise and not statistically different from
-zero. This is evidence that contemporaneous payments are endogenous to weak
-farm conditions and that timing remains difficult; it is not evidence that
-farmers literally withdraw more than the payment. Publication estimates need
-predetermined simulated eligibility/payment instruments and timing checks.
+The long BEA total-payment estimate is negative and the separate FSA
+program-family estimates are imprecise. By contrast, the total-FSA coefficient
+is positive and statistically significant: 0.0762 dollars of county deposit
+stock per dollar of FSA disbursement. The implemented deposit-only policy
+counterfactual uses that coefficient. It remains a reduced-form association,
+not a farmer-level saving propensity or a fully causal estimate; publication
+estimates still need predetermined simulated eligibility/payment instruments
+and timing checks.
 
 The implemented annual FSA file pipeline now covers payment windows associated
 with 2014-2025 disbursement files. ARC/PLC disbursements first appear in 2015;
@@ -84,10 +88,13 @@ different accounting conventions.
 Separate diagnostic coefficients are reported for ARC/PLC, MFP, CFAP and total
 government payments. The primary overlapping-years regression includes
 ARC/PLC, MFP and CFAP jointly; therefore ARC/PLC is not omitted during the MFP
-or CFAP episodes. The current conditional program-specific point estimates are
-not statistically different from zero, so the simulation reports zero, estimated,
-10-percent and 25-percent deposit-retention cases instead of presenting the
-naive point estimate as established behavior.
+or CFAP episodes. Because those conditional program-specific point estimates
+are not statistically different from zero, they are not used in the main
+simulation. The simulation reports the percentage increase in total FSA
+payments and applies only the significant total-FSA coefficient. In levels this
+is algebraically `0.0762 * incremental OBBBA payments`; the percentage form is
+retained for interpretation and the level form handles counties whose 2025 FSA
+baseline is zero.
 
 ## Current OBBBA exposure implementation
 

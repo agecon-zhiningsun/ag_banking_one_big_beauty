@@ -16,11 +16,11 @@ bank <- as.data.table(read_parquet(file.path(
   final_dir, "bank_year_market_power_inputs_1994_2025.parquet"
 )))[year == 2025L]
 
-# Central dynamic input grid. Keep multiple retention assumptions because the
-# reduced-form program-family coefficients remain imprecise.
+# Central dynamic input grid. The policy experiment now uses only the positive,
+# statistically significant total-FSA payment-retention estimate.
 shocks <- shocks[
   actual_revenue_share %in% c(0.80, 0.85, 0.90) &
-    retention_case %in% c("estimated_naive", "ten_percent", "twenty_five_percent")
+    retention_case == "estimated_total_fsa"
 ]
 bellman <- merge(shocks, bank, by = "cert", all.x = TRUE)
 bellman[, `:=`(
@@ -53,14 +53,15 @@ counterfactuals <- data.table(
   ),
   required_change = c(
     "Set deposit and borrower policy shocks to zero.",
-    "Apply the estimated/scenario deposit-market-size shock and later add borrower demand/default shocks.",
+    "Apply the estimated total-FSA deposit-market-size shock; this is the identified deposit-only policy experiment.",
     "Apply OBBBA and impose the correctly derived competitive deposit-pricing condition.",
     "Apply OBBBA and constrain the loan rate to risk-adjusted marginal cost.",
     "Impose both competitive pricing conditions and re-solve.",
     "Apply OBBBA while relaxing the capital constraint and re-solve."
   ),
   current_status = c(
-    "input_ready", "deposit_input_ready_borrower_channels_pending",
+    "reduced_form_deposit_counterfactual_complete",
+    "reduced_form_deposit_counterfactual_complete_bellman_pending",
     "solver_change_required", "solver_change_required",
     "solver_change_required", "solver_change_required"
   )
