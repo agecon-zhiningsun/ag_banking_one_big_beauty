@@ -96,11 +96,11 @@ shock[, `:=`(
     obbba_payment_service_area_intensity,
   predicted_log_ag_loan_change_ci_high = (beta_ag_balance + 1.96 * se_ag_balance) *
     obbba_payment_service_area_intensity,
-  predicted_ag_loan_rate_change = fifelse(
-    ag_rate_p_value < 0.10,
-    beta_ag_rate * obbba_payment_service_area_intensity,
-    NA_real_
-  )
+  predicted_ag_loan_rate_change = if (ag_rate_p_value < 0.10) {
+    beta_ag_rate * obbba_payment_service_area_intensity
+  } else {
+    rep(NA_real_, .N)
+  }
 )]
 shock[, predicted_ag_loan_change_thousands :=
         avg_lnag * (exp(predicted_log_ag_loan_change) - 1)]
