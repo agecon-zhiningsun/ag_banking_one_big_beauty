@@ -1,8 +1,9 @@
 specification,term,estimate,std_error,p_value,observations,counties
 "BEA total government payments, county and year FE",government_payment_share_lag_deposits,-0.0440785751312424,0.013799639744224,0.00141810824477347,75093,2754
-"FSA ARC/PLC disbursements, 2015-2024 SOD windows",arc_plc_payment_share_lag_deposits,0.0113283018552372,0.0563275544331754,0.840621621067954,30914,3204
-"FSA MFP disbursements, 2018-2022 SOD windows",mfp_payment_share_lag_deposits,0.032308357364045,0.124491816006982,0.795249267552976,15420,3198
-"FSA CFAP disbursements, 2020-2024 SOD windows",cfap_payment_share_lag_deposits,-0.328418039703808,0.239777104792131,0.170882921950022,15306,3195
-"Joint FSA program-family model, 2015-2024",arc_plc_payment_share_lag_deposits,0.0141539956037423,0.0355502655650353,0.69055325888687,31227,3204
-"Joint FSA program-family model, 2015-2024",mfp_payment_share_lag_deposits,-0.0366614952527723,0.0311894252862406,0.239903566797182,31227,3204
-"Joint FSA program-family model, 2015-2024",cfap_payment_share_lag_deposits,0.0845728234110112,0.10640291464225,0.426768035789156,31227,3204
+"FSA total disbursements, 2014-2025 SOD windows",total_fsa_payment_share_lag_deposits,0.0761640174348676,0.0233695908994977,0.00112930328005035,36961,3207
+Univariate FSA ARC/PLC diagnostic,arc_plc_payment_share_lag_deposits,0.0115257597667447,0.0563241812430309,0.837872238876201,30914,3204
+Univariate FSA MFP diagnostic,mfp_payment_share_lag_deposits,0.032308357364045,0.124491816006982,0.795249267552976,15420,3198
+Univariate FSA CFAP diagnostic,cfap_payment_share_lag_deposits,-0.328481981987724,0.239785109623198,0.170813940231485,15306,3195
+"Primary conditional FSA program-family model, 2015-2024",arc_plc_payment_share_lag_deposits,0.0142455184434607,0.0355571199186183,0.688713694850866,31227,3204
+"Primary conditional FSA program-family model, 2015-2024",mfp_payment_share_lag_deposits,-0.0366630494566087,0.0311885061217695,0.239869794983745,31227,3204
+"Primary conditional FSA program-family model, 2015-2024",cfap_payment_share_lag_deposits,0.0845154047829241,0.106398863788192,0.427064404435011,31227,3204

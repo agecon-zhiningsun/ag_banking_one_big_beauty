@@ -17,7 +17,7 @@ arc_plc <- as.data.table(read_parquet(file.path(
   policy_dir, "fsa_arc_plc_county_2014_2018.parquet"
 )))
 program_payments <- as.data.table(read_parquet(file.path(
-  policy_dir, "fsa_county_program_payments_2014_2023.parquet"
+  policy_dir, "fsa_county_program_payments_2014_2025.parquet"
 )))
 county_market <- as.data.table(read_parquet(file.path(
   cache, "sod", "county_market_year_1994_2025.parquet"
@@ -41,7 +41,10 @@ setnames(
   c("arc_plc_program_year_payments_dollars", "arc_program_year_payments_dollars", "plc_program_year_payments_dollars")
 )
 county <- merge(county, program_payments, by = c("county_fips", "year"), all.x = TRUE)
-for (field in c("arc_plc_payments_dollars", "mfp_payments_dollars", "cfap_payments_dollars", "program_payment_dollars")) {
+for (field in c(
+  "arc_plc_payments_dollars", "mfp_payments_dollars", "cfap_payments_dollars",
+  "selected_program_payment_dollars", "total_fsa_payments_dollars"
+)) {
   county[year %between% c(2014L, 2024L) & is.na(get(field)), (field) := 0]
 }
 county <- merge(
@@ -56,7 +59,8 @@ county[, `:=`(
   government_payment_share_lag_deposits = government_payments_thousands / shift(county_deposits),
   arc_plc_payment_share_lag_deposits = (arc_plc_payments_dollars / 1000) / shift(county_deposits),
   mfp_payment_share_lag_deposits = (mfp_payments_dollars / 1000) / shift(county_deposits),
-  cfap_payment_share_lag_deposits = (cfap_payments_dollars / 1000) / shift(county_deposits)
+  cfap_payment_share_lag_deposits = (cfap_payments_dollars / 1000) / shift(county_deposits),
+  total_fsa_payment_share_lag_deposits = (total_fsa_payments_dollars / 1000) / shift(county_deposits)
 ), by = county_fips]
 
 # Bank exposure uses prior-year SOD geography. This does not claim that a bank's
@@ -76,6 +80,7 @@ bank_exposure <- bank_geo[, .(
   weighted_arc_plc_payments_thousands = sum(lagged_sod_weight * arc_plc_payments_dollars / 1000, na.rm = TRUE),
   weighted_mfp_payments_thousands = sum(lagged_sod_weight * mfp_payments_dollars / 1000, na.rm = TRUE),
   weighted_cfap_payments_thousands = sum(lagged_sod_weight * cfap_payments_dollars / 1000, na.rm = TRUE),
+  weighted_total_fsa_payments_thousands = sum(lagged_sod_weight * total_fsa_payments_dollars / 1000, na.rm = TRUE),
   lagged_sod_weight_covered = sum(lagged_sod_weight[!is.na(government_payments_thousands)], na.rm = TRUE),
   counties_served = uniqueN(county_fips)
 ), by = .(cert, year = exposure_year)]

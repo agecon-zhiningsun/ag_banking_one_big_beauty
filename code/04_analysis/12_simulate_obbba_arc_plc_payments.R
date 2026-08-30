@@ -151,7 +151,10 @@ county[, full_incremental_payment_scenario := incremental_arc_payment +
          incremental_plc_payment + added_base_payment_scenario]
 
 retention <- fread(file.path("output", "tables", "payment_retention", "payment_retention_estimates.csv"))
-arc_retention <- retention[grepl("ARC/PLC disbursements", specification), estimate][1L]
+arc_retention <- retention[
+  grepl("Primary conditional", specification) & term == "arc_plc_payment_share_lag_deposits",
+  estimate
+][1L]
 retention_scenarios <- data.table(
   retention_case = c("zero", "estimated_naive", "ten_percent", "twenty_five_percent"),
   retention_rate = c(0, arc_retention, 0.10, 0.25)
@@ -162,6 +165,13 @@ county_deposit <- merge(county, retention_scenarios, by = "cross_join_key", allo
 county_deposit[, cross_join_key := NULL]
 county_deposit[, predicted_deposit_change := retention_rate * full_incremental_payment_scenario]
 
+county_market <- as.data.table(read_parquet(file.path(
+  data_root, "pipeline_cache", "nc1177", "sod", "county_market_year_1994_2025.parquet"
+)))[year == 2025L, .(county_fips, county_deposits_2025 = county_deposits)]
+county_deposit <- merge(county_deposit, county_market, by = "county_fips", all.x = TRUE)
+county_deposit[, predicted_county_deposit_growth :=
+                 predicted_deposit_change / pmax(county_deposits_2025 * 1000, 1)]
+
 # Bank mapping uses 2025 branch-deposit shares and remains a service-area exposure.
 county_bank <- as.data.table(read_parquet(file.path(
   data_root, "pipeline_cache", "nc1177", "sod", "county_bank_year_1994_2025.parquet"
@@ -170,7 +180,7 @@ county_bank[, weight := bank_county_deposits / sum(bank_county_deposits, na.rm =
 bank <- county_deposit[county_bank, on = "county_fips", allow.cartesian = TRUE]
 bank <- bank[, .(
   predicted_incremental_policy_payments = sum(weight * full_incremental_payment_scenario, na.rm = TRUE),
-  predicted_deposit_change = sum(weight * predicted_deposit_change, na.rm = TRUE),
+  weighted_county_deposit_growth = sum(weight * predicted_county_deposit_growth, na.rm = TRUE),
   exposure_weight_covered = sum(weight[!is.na(full_incremental_payment_scenario)], na.rm = TRUE)
 ), by = .(cert, actual_revenue_share, retention_case, retention_rate)]
 

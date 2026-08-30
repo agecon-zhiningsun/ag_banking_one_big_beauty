@@ -33,6 +33,14 @@ total_model <- feols(
                   trim(government_payment_share_lag_deposits)], cluster = ~county_fips
 )
 
+fsa_total_sample <- county[year %between% c(2014L, 2025L) &
+                             is.finite(total_fsa_payment_share_lag_deposits)]
+fsa_total_sample <- fsa_total_sample[trim(total_fsa_payment_share_lag_deposits)]
+fsa_total_model <- feols(
+  deposit_growth ~ total_fsa_payment_share_lag_deposits | county_fips + year,
+  data = fsa_total_sample, cluster = ~county_fips
+)
+
 arc_sample <- county[year %between% c(2015L, 2024L) & is.finite(arc_plc_payment_share_lag_deposits)]
 arc_sample <- arc_sample[trim(arc_plc_payment_share_lag_deposits)]
 arc_model <- feols(
@@ -81,20 +89,23 @@ extract <- function(model, label) {
 
 results <- rbindlist(list(
   extract(total_model, "BEA total government payments, county and year FE"),
-  extract(arc_model, "FSA ARC/PLC disbursements, 2015-2024 SOD windows"),
-  extract(mfp_model, "FSA MFP disbursements, 2018-2022 SOD windows"),
-  extract(cfap_model, "FSA CFAP disbursements, 2020-2024 SOD windows"),
-  extract(joint_model, "Joint FSA program-family model, 2015-2024")
+  extract(fsa_total_model, "FSA total disbursements, 2014-2025 SOD windows"),
+  extract(arc_model, "Univariate FSA ARC/PLC diagnostic"),
+  extract(mfp_model, "Univariate FSA MFP diagnostic"),
+  extract(cfap_model, "Univariate FSA CFAP diagnostic"),
+  extract(joint_model, "Primary conditional FSA program-family model, 2015-2024")
 ))
 fwrite(results, file.path(out_dir, "payment_retention_estimates.csv"))
 coverage_path <- file.path(
   data_root, "pipeline_cache", "nc1177", "obbba_policy",
-  "fsa_program_payment_coverage_2014_2023.csv"
+  "fsa_program_payment_coverage_2014_2025.csv"
 )
 if (file.exists(coverage_path)) {
-  fwrite(fread(coverage_path), file.path(out_dir, "fsa_program_payment_coverage_2014_2023.csv"))
+  fwrite(fread(coverage_path), file.path(out_dir, "fsa_program_payment_coverage_2014_2025.csv"))
 }
-model_text <- capture.output(etable(total_model, arc_model, mfp_model, cfap_model, joint_model))
+model_text <- capture.output(etable(
+  total_model, fsa_total_model, arc_model, mfp_model, cfap_model, joint_model
+))
 writeLines(sub("[[:space:]]+$", "", model_text), file.path(out_dir, "payment_retention_models.txt"))
 
 message("Wrote payment-retention estimates to ", out_dir)

@@ -68,15 +68,24 @@ farmers literally withdraw more than the payment. Publication estimates need
 predetermined simulated eligibility/payment instruments and timing checks.
 
 The implemented annual FSA file pipeline now covers payment windows associated
-with 2014-2023 disbursement files. ARC/PLC disbursements first appear in 2015;
+with 2014-2025 disbursement files. ARC/PLC disbursements first appear in 2015;
 there is no valid ARC/PLC series for 1994-2013 because the program did not yet
 exist. BEA total government payments provide the longer 1994-2022 overlap with
 SOD deposits. Payments are aligned to June SOD years: July-December payments
 are assigned to the following June observation.
 
+BEA discontinued the detailed county farm-income table CAINC45 after 2022, so
+its government-payment line cannot be truthfully extended to 2025. The project
+therefore retains BEA total government payments through 2022 and adds a
+separately labeled total-FSA-disbursement measure through 2025. These concepts
+must not be spliced without a source indicator because BEA is broader and uses
+different accounting conventions.
+
 Separate diagnostic coefficients are reported for ARC/PLC, MFP, CFAP and total
-government payments. The current program-specific point estimates are not
-statistically different from zero, so the simulation reports zero, estimated,
+government payments. The primary overlapping-years regression includes
+ARC/PLC, MFP and CFAP jointly; therefore ARC/PLC is not omitted during the MFP
+or CFAP episodes. The current conditional program-specific point estimates are
+not statistically different from zero, so the simulation reports zero, estimated,
 10-percent and 25-percent deposit-retention cases instead of presenting the
 naive point estimate as established behavior.
 
@@ -98,6 +107,18 @@ pre-OBBBA statutory-floor counterfactual. ARC is simulated at actual revenue
 equal to 70, 80, 85, 90 and 100 percent of benchmark revenue. The 30-million-
 acre case is allocated proportionally to the observed 2025 county/crop/program
 mix and must be labeled a scenario rather than an official county allocation.
+
+## Bellman integration status
+
+`code/04_analysis/13_prepare_obbba_bellman_counterfactuals.R` converts county
+deposit changes into bank-specific percentage shocks using 2025 branch-deposit
+geography and creates Bellman-ready deposit-market-size multipliers. The
+counterfactual registry covers no policy, current market power, competitive
+deposits, competitive lending, both markets competitive, and no capital
+constraint. Only the deposit input is currently ready. Borrower loan-demand and
+default-risk shocks must be estimated before the full OBBBA Bellman solution is
+interpretable. Competitive cases also require corrected pricing constraints;
+the earlier demand-slope-times-100 shortcut remains prohibited.
 
 Do not use realized post-law payments alone as treatment; those payments respond to prices, yields and participation.
 

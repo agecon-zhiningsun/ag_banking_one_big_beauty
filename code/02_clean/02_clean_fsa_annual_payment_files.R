@@ -15,10 +15,10 @@ if (!length(files)) stop("No FSA annual payment workbooks found in ", raw_dir)
 
 infer_payment_year <- function(path) {
   name <- tolower(basename(path))
-  hit <- regmatches(name, regexpr("pmt(14|15|16|17|18|19|20|22|23)", name))
+  hit <- regmatches(name, regexpr("pmt(14|15|16|17|18|19|20|22|23|24|25)", name))
   if (length(hit) && nzchar(hit)) return(2000L + as.integer(sub("pmt", "", hit)))
   # FSA's 2021 files have generic state-range names between the PMT22 and PMT20
-  # releases. The downloader puts only 2014-2023 workbooks in this directory.
+  # releases. The downloader puts only 2014-2025 workbooks in this directory.
   2021L
 }
 
@@ -39,9 +39,8 @@ aggregate_file <- function(path) {
     grepl("AGRICULTURAL RISK COVERAGE|PRICE LOSS COVERAGE", description), "ARC_PLC",
     grepl("MARKET FACILITATION PROGRAM", description), "MFP",
     grepl("CORONAVIRUS FOOD ASSISTANCE|(^|[^A-Z])CFAP([^A-Z]|$)", description), "CFAP",
-    default = NA_character_
+    default = "OTHER_FSA"
   )]
-  z <- z[!is.na(program_family)]
   z[, payment_year := as.integer(format(as.Date(payment_date), "%Y"))]
   z[is.na(payment_year), payment_year := infer_payment_year(path)]
   z[, payment_month := as.integer(format(as.Date(payment_date), "%m"))]
@@ -67,14 +66,15 @@ county_year <- payments[, .(
   arc_plc_payments_dollars = sum(payment_dollars[program_family == "ARC_PLC"], na.rm = TRUE),
   mfp_payments_dollars = sum(payment_dollars[program_family == "MFP"], na.rm = TRUE),
   cfap_payments_dollars = sum(payment_dollars[program_family == "CFAP"], na.rm = TRUE),
-  program_payment_dollars = sum(payment_dollars, na.rm = TRUE)
+  selected_program_payment_dollars = sum(payment_dollars[program_family != "OTHER_FSA"], na.rm = TRUE),
+  total_fsa_payments_dollars = sum(payment_dollars, na.rm = TRUE)
 ), by = .(county_fips, year = sod_year)]
 
-write_parquet(payments, file.path(out_dir, "fsa_county_program_payments_detail_2014_2023.parquet"), compression = "zstd")
-write_parquet(county_year, file.path(out_dir, "fsa_county_program_payments_2014_2023.parquet"), compression = "zstd")
+write_parquet(payments, file.path(out_dir, "fsa_county_program_payments_detail_2014_2025.parquet"), compression = "zstd")
+write_parquet(county_year, file.path(out_dir, "fsa_county_program_payments_2014_2025.parquet"), compression = "zstd")
 fwrite(payments[, .(
   payment_dollars = sum(payment_dollars), transactions = sum(transactions), counties = uniqueN(county_fips)
 ), by = .(payment_year, program_family)][order(payment_year, program_family)],
-file.path(out_dir, "fsa_program_payment_coverage_2014_2023.csv"))
+file.path(out_dir, "fsa_program_payment_coverage_2014_2025.csv"))
 
 message("Wrote county-program aggregates to ", out_dir)

@@ -44,6 +44,7 @@ Expected external layout:
 4. Run `code/04_analysis/11_estimate_payment_retention.R`.
 5. Run `code/03_construct/12_construct_obbba_exposure.R`.
 6. Run `code/04_analysis/12_simulate_obbba_arc_plc_payments.R`.
+7. Run `code/04_analysis/13_prepare_obbba_bellman_counterfactuals.R`.
 
 This module keeps county-market and bank designs distinct. The county design
 relates policy payments to total deposits across all branches in a county. The
@@ -51,11 +52,14 @@ bank design uses prior-year SOD deposit geography to construct service-area
 exposure; it does not assign county payments to individual banks or assume that
 all bank depositors are farmers. The first-pass fixed-effect estimates in
 `output/tables/payment_retention/` are diagnostics, not causal estimates.
-The FSA recipient files cover calendar disbursements from 2014 through 2023;
+The FSA recipient files cover calendar disbursements from 2014 through 2025;
 recipient names and addresses remain outside Git, and only county-program
 aggregates enter the analytical panels. ARC/PLC, MFP, CFAP and BEA total
 government payments are estimated separately. OBBBA payment/deposit scenarios
 are in `output/tables/obbba_simulation/`.
+Bellman-ready bank shock inputs and the counterfactual registry are in
+`output/tables/obbba_bellman/`; borrower-demand and default-risk policy shocks
+remain to be estimated before the full dynamic policy experiment is identified.
 
 ## Current BLP results
 

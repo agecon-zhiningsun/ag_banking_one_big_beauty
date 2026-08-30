@@ -73,4 +73,28 @@ for (href in hrefs[seq_len(88L)]) {
   download_once(url, destination)
 }
 
+# The 2024-2025 entries route through FSA document landing pages and therefore
+# are not exposed as workbook hrefs in the page HTML used above.
+current_payment_urls <- c(
+  "https://www.fsa.usda.gov/sites/default/files/2026-02/state%20al-id.foia_.na_.pmt25.final_.dt25365.xlsx",
+  "https://www.fsa.usda.gov/sites/default/files/2026-02/state%20ia.foia_.na_.pmt25.final_.dt25365.xlsx",
+  "https://www.fsa.usda.gov/sites/default/files/2026-02/state%20il-in.foia_.na_.pmt25.final_.dt25365.xlsx",
+  "https://www.fsa.usda.gov/sites/default/files/2026-02/state%20ks-ky.foia_.na_.pmt25.final_.dt25365.xlsx",
+  "https://www.fsa.usda.gov/sites/default/files/2026-02/state%20la-mn.foia_.na_.pmt25.finaldt25365.xlsx",
+  "https://www.fsa.usda.gov/sites/default/files/2026-02/state%20ms-mt.foia_.na_.pmt25.final_.dt25365.xlsx",
+  "https://www.fsa.usda.gov/sites/default/files/2026-02/state%20nd-ok.foia_.na_.pmt25.final_.dt25365.xlsx",
+  "https://www.fsa.usda.gov/sites/default/files/2026-02/state%20ne-nc.foia_.na_.pmt25.final_.dt25365.xlsx",
+  "https://www.fsa.usda.gov/sites/default/files/2026-02/state%20or-tn.foia_.na_.pmt25.final_.dt25365.xlsx",
+  "https://www.fsa.usda.gov/sites/default/files/2026-02/state%20tx-wa.foia_.na_.pmt25.final_.dt25365.xlsx",
+  "https://www.fsa.usda.gov/sites/default/files/2026-02/state%20wv-wy.foia_.na_.pmt25.final_.dt25365.xlsx",
+  "https://www.fsa.usda.gov/sites/default/files/2025-01/state%20al-in.foia_.na_.pmt24.final_.dt25002.xlsx",
+  "https://www.fsa.usda.gov/sites/default/files/2025-01/state%20mn-nc.foia_.na_.pmt24.final_.dt25002.xlsx",
+  "https://www.fsa.usda.gov/sites/default/files/2025-01/state%20nd-tn.foia_.na_.pmt24.final_.dt25002.xlsx",
+  "https://www.fsa.usda.gov/sites/default/files/2025-01/state%20tx-wy.foia_.na_.pmt24.final_.dt25002.xlsx",
+  "https://www.fsa.usda.gov/sites/default/files/2025-01/state%20ia-mi.foia_.na_.pmt24.final_.dt25002.xlsx"
+)
+for (url in current_payment_urls) {
+  download_once(url, file.path(payment_dir, utils::URLdecode(basename(url))))
+}
+
 message("Policy source files are present in ", raw_dir)
