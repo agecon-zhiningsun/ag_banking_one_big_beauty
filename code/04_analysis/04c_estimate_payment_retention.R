@@ -7,10 +7,10 @@ suppressPackageStartupMessages({
 })
 
 final_dir <- file.path(data_root, "processed", "nc1177")
-out_dir <- file.path("output", "tables", "payment_retention")
+out_dir <- file.path("output", "tables", "04c_payment_retention")
 dir.create(out_dir, recursive = TRUE, showWarnings = FALSE)
 
-county <- as.data.table(read_parquet(file.path(final_dir, "county_payment_retention_panel_1994_2025.parquet")))
+county <- as.data.table(read_parquet(file.path(final_dir, "03c_county_payment_retention_panel_1994_2025.parquet")))
 county <- county[is.finite(delta_county_deposits_thousands) & lag_county_deposits_thousands > 0]
 county[, deposit_growth := delta_county_deposits_thousands / lag_county_deposits_thousands]
 
@@ -95,17 +95,17 @@ results <- rbindlist(list(
   extract(cfap_model, "Univariate FSA CFAP diagnostic"),
   extract(joint_model, "Primary conditional FSA program-family model, 2015-2024")
 ))
-fwrite(results, file.path(out_dir, "payment_retention_estimates.csv"))
+fwrite(results, file.path(out_dir, "04c_payment_retention_estimates.csv"))
 coverage_path <- file.path(
   data_root, "pipeline_cache", "nc1177", "obbba_policy",
-  "fsa_program_payment_coverage_2014_2025.csv"
+  "02b_fsa_program_payment_coverage_2014_2025.csv"
 )
 if (file.exists(coverage_path)) {
-  fwrite(fread(coverage_path), file.path(out_dir, "fsa_program_payment_coverage_2014_2025.csv"))
+  fwrite(fread(coverage_path), file.path(out_dir, "04c_fsa_program_payment_coverage_2014_2025.csv"))
 }
 model_text <- capture.output(etable(
   total_model, fsa_total_model, arc_model, mfp_model, cfap_model, joint_model
 ))
-writeLines(sub("[[:space:]]+$", "", model_text), file.path(out_dir, "payment_retention_models.txt"))
+writeLines(sub("[[:space:]]+$", "", model_text), file.path(out_dir, "04c_payment_retention_models.txt"))
 
 message("Wrote payment-retention estimates to ", out_dir)

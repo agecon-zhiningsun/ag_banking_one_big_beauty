@@ -8,8 +8,8 @@ suppressPackageStartupMessages({
 })
 
 input <- file.path(data_root, "processed", "nc1177",
-                   "bank_year_market_power_inputs_1994_2025.parquet")
-out_table <- file.path("output", "tables", "blp_final")
+                   "03b_bank_year_market_power_inputs_1994_2025.parquet")
+out_table <- file.path("output", "tables", "04a_blp")
 out_data <- file.path(data_root, "processed", "nc1177", "blp_final")
 dir.create(out_table, recursive = TRUE, showWarnings = FALSE)
 dir.create(out_data, recursive = TRUE, showWarnings = FALSE)
@@ -211,7 +211,7 @@ estimate_market <- function(market, instrument_set) {
                structural_margin = fifelse(valid_margin, raw_margin, NA_real_),
                retained_nonnegative_margin = valid_margin,
                instrument_set = instrument_set)]
-  write_parquet(panel, file.path(out_data, paste0(market, "_", instrument_set,
+  write_parquet(panel, file.path(out_data, paste0("04a_", market, "_", instrument_set,
                                                   "_bank_year.parquet")))
   result
 }
@@ -223,5 +223,5 @@ results <- rbindlist(lapply(
     function(iv) estimate_market(m, iv)
   ))
 ))
-fwrite(results, file.path(out_table, "final_blp_summary.csv"))
+fwrite(results, file.path(out_table, "04a_final_blp_summary.csv"))
 message("Wrote final BLP results to ", out_table)

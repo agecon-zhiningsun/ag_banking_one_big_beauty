@@ -134,7 +134,7 @@ if (nrow(invalid_ag_market)) {
 }
 
 setorder(panel, year, cert)
-write_parquet(panel, file.path(final_dir, "bank_year_market_power_inputs_1994_2025.parquet"), compression = "zstd")
+write_parquet(panel, file.path(final_dir, "03b_bank_year_market_power_inputs_1994_2025.parquet"), compression = "zstd")
 fwrite(panel[, .(rows = .N, banks = uniqueN(cert)), by = year],
-       file.path(out_dir, "market_power_panel_coverage.csv"))
+       file.path(out_dir, "03b_market_power_panel_coverage.csv"))
 message("Wrote NC1177 market-power panel to: ", final_dir)

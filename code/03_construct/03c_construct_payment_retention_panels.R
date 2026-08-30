@@ -11,13 +11,13 @@ final_dir <- file.path(data_root, "processed", "nc1177")
 dir.create(final_dir, recursive = TRUE, showWarnings = FALSE)
 
 payments <- as.data.table(read_parquet(file.path(
-  policy_dir, "bea_county_government_payments_1969_2022.parquet"
+  policy_dir, "02a_bea_county_government_payments_1969_2022.parquet"
 )))
 arc_plc <- as.data.table(read_parquet(file.path(
-  policy_dir, "fsa_arc_plc_county_2014_2018.parquet"
+  policy_dir, "02a_fsa_arc_plc_county_2014_2018.parquet"
 )))
 program_payments <- as.data.table(read_parquet(file.path(
-  policy_dir, "fsa_county_program_payments_2014_2025.parquet"
+  policy_dir, "02b_fsa_county_program_payments_2014_2025.parquet"
 )))
 county_market <- as.data.table(read_parquet(file.path(
   cache, "sod", "county_market_year_1994_2025.parquet"
@@ -85,10 +85,10 @@ bank_exposure <- bank_geo[, .(
   counties_served = uniqueN(county_fips)
 ), by = .(cert, year = exposure_year)]
 
-bank_panel <- as.data.table(read_parquet(file.path(final_dir, "bank_year_market_power_inputs_1994_2025.parquet")))
+bank_panel <- as.data.table(read_parquet(file.path(final_dir, "03b_bank_year_market_power_inputs_1994_2025.parquet")))
 bank_panel <- merge(bank_panel, bank_exposure, by = c("cert", "year"), all.x = TRUE)
 
-write_parquet(county, file.path(final_dir, "county_payment_retention_panel_1994_2025.parquet"), compression = "zstd")
-write_parquet(bank_panel, file.path(final_dir, "bank_policy_exposure_panel_1994_2025.parquet"), compression = "zstd")
+write_parquet(county, file.path(final_dir, "03c_county_payment_retention_panel_1994_2025.parquet"), compression = "zstd")
+write_parquet(bank_panel, file.path(final_dir, "03c_bank_policy_exposure_panel_1994_2025.parquet"), compression = "zstd")
 
 message("Wrote county and bank payment-exposure panels to ", final_dir)

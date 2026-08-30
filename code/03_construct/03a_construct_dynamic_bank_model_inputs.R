@@ -14,15 +14,15 @@ bank_quarter_path <- file.path(
 )
 market_path <- file.path(
   data_root, "processed", "nc1177",
-  "bank_year_market_power_inputs_1994_2025.parquet"
+  "03b_bank_year_market_power_inputs_1994_2025.parquet"
 )
 blp_path <- file.path(
   data_root, "processed", "nc1177", "blp_market_power",
-  "ag_production_bank_year.parquet"
+  "03b_ag_production_bank_year.parquet"
 )
 deposit_blp_path <- file.path(
   data_root, "processed", "nc1177", "blp_market_power",
-  "deposits_bank_year.parquet"
+  "03b_deposits_bank_year.parquet"
 )
 wang_raw_dir <- file.path(
   data_root, "raw", "call_reports", "fdic_wang_dynamic_inputs"
@@ -42,7 +42,7 @@ missing <- required[!file.exists(required)]
 if (length(missing)) stop("Missing required input(s):\n", paste(missing, collapse = "\n"))
 wang_files <- sort(list.files(wang_raw_dir, pattern = "\\.csv$", full.names = TRUE))
 if (!length(wang_files)) {
-  stop("Run code/01_download/12_fdic_wang_dynamic_inputs.R first.")
+  stop("Required Wang/FDIC source inputs are missing; see docs/05a_data_requirements.md.")
 }
 
 bank_quarter <- as.data.table(read_parquet(bank_quarter_path))
@@ -232,12 +232,12 @@ model_panel <- panel[
 
 write_parquet(
   model_panel,
-  file.path(out_dir, "bank_year_dynamic_model_inputs_1994_2025.parquet"),
+  file.path(out_dir, "03a_bank_year_dynamic_model_inputs_1994_2025.parquet"),
   compression = "zstd"
 )
 fwrite(
   ers[year >= 1994L & year <= 2025L],
-  file.path(out_dir, "national_farm_state_1994_2025.csv")
+  file.path(out_dir, "03a_national_farm_state_1994_2025.csv")
 )
 fwrite(
   model_panel[, .(
@@ -254,7 +254,7 @@ fwrite(
     mean_net_chargeoff_rate = mean(net_chargeoff_rate),
     mean_wholesale_funding_ratio = mean(wholesale_funding_asset_ratio)
   )],
-  file.path(out_dir, "dynamic_model_input_summary.csv")
+  file.path(out_dir, "03a_dynamic_model_input_summary.csv")
 )
 
 message("Constructed ", format(nrow(model_panel), big.mark = ","),

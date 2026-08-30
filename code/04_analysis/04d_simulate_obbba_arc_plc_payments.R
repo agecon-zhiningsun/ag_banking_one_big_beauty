@@ -8,7 +8,7 @@ suppressPackageStartupMessages({
 
 raw_dir <- file.path(data_root, "raw", "obbba_policy", "fsa_arc_plc")
 final_dir <- file.path(data_root, "processed", "nc1177")
-out_dir <- file.path("output", "tables", "obbba_simulation")
+out_dir <- file.path("output", "tables", "04d_obbba_simulation")
 dir.create(out_dir, recursive = TRUE, showWarnings = FALSE)
 
 key <- function(x) gsub("[^a-z0-9]+", "_", tolower(trimws(x)))
@@ -70,7 +70,7 @@ plc <- plc[, .(
   obbba_effective_reference_price = as.numeric(obbba_effective_reference_price)
 )]
 
-statutory <- fread(file.path("docs", "obbba_plc_reference_prices.csv"))
+statutory <- fread(file.path("docs", "05e_obbba_plc_reference_prices.csv"))
 statutory[, crop_key := commodity]
 # Convert statutory dollars per cwt/ton to the FSA payment-rate unit matching
 # county program yields (pounds except flaxseed, which is bushels).
@@ -159,7 +159,9 @@ county[, added_base_payment_scenario := proportional_added_base_multiplier *
 county[, full_incremental_payment_scenario := incremental_arc_payment +
          incremental_plc_payment + added_base_payment_scenario]
 
-retention <- fread(file.path("output", "tables", "payment_retention", "payment_retention_estimates.csv"))
+retention <- fread(file.path(
+  "output", "tables", "04c_payment_retention", "04c_payment_retention_estimates.csv"
+))
 total_fsa_row <- retention[
   specification == "FSA total disbursements, 2014-2025 SOD windows" &
     term == "total_fsa_payment_share_lag_deposits"
@@ -177,7 +179,7 @@ if (!nrow(total_fsa_row) || !is.finite(total_fsa_row$estimate)) {
 # This uses the significant total-FSA coefficient, not the statistically
 # insignificant ARC/PLC-family coefficient.
 historical <- as.data.table(read_parquet(file.path(
-  final_dir, "county_payment_retention_panel_1994_2025.parquet"
+  final_dir, "03c_county_payment_retention_panel_1994_2025.parquet"
 )))[year == 2025L, .(
   county_fips,
   baseline_total_fsa_payments = total_fsa_payments_dollars,
@@ -228,10 +230,10 @@ bank <- bank[, .(
   exposure_weight_covered = sum(weight[!is.na(full_incremental_payment_scenario)], na.rm = TRUE)
 ), by = .(cert, actual_revenue_share, retention_case, retention_rate)]
 
-write_parquet(plc_inputs, file.path(final_dir, "obbba_plc_payment_simulation_inputs.parquet"), compression = "zstd")
-write_parquet(arc_scenarios, file.path(final_dir, "obbba_arc_payment_simulation_inputs.parquet"), compression = "zstd")
-write_parquet(county_deposit, file.path(final_dir, "obbba_county_payment_deposit_scenarios.parquet"), compression = "zstd")
-write_parquet(bank, file.path(final_dir, "obbba_bank_payment_deposit_scenarios.parquet"), compression = "zstd")
+write_parquet(plc_inputs, file.path(final_dir, "04d_obbba_plc_payment_simulation_inputs.parquet"), compression = "zstd")
+write_parquet(arc_scenarios, file.path(final_dir, "04d_obbba_arc_payment_simulation_inputs.parquet"), compression = "zstd")
+write_parquet(county_deposit, file.path(final_dir, "04d_obbba_county_payment_deposit_scenarios.parquet"), compression = "zstd")
+write_parquet(bank, file.path(final_dir, "04d_obbba_bank_payment_deposit_scenarios.parquet"), compression = "zstd")
 
 summary <- county_deposit[, .(
   baseline_arc_payments = sum(baseline_arc_payment),
@@ -245,11 +247,11 @@ summary <- county_deposit[, .(
   policy_increase_pct_total_fsa = 100 * sum(full_incremental_payment_scenario) /
     pmax(sum(baseline_total_fsa_payments, na.rm = TRUE), 1)
 ), by = .(actual_revenue_share, retention_case, retention_rate)]
-fwrite(summary, file.path(out_dir, "national_scenario_summary.csv"))
+fwrite(summary, file.path(out_dir, "04d_national_scenario_summary.csv"))
 fwrite(plc_inputs[, .(
   plc_rows = .N,
   matched_yield_share = sum(base_acres[is.finite(plc_yield)], na.rm = TRUE) / sum(base_acres),
   matched_rate_share = sum(base_acres[is.finite(obbba_plc_rate)], na.rm = TRUE) / sum(base_acres)
-)], file.path(out_dir, "plc_input_coverage.csv"))
+)], file.path(out_dir, "04d_plc_input_coverage.csv"))
 
 message("Wrote OBBBA ARC/PLC payment and deposit scenarios to ", out_dir)

@@ -65,8 +65,8 @@ bea[, `:=`(
 bea <- bea[nchar(county_fips) == 5L & substr(county_fips, 3, 5) != "000",
            .(county_fips, county_name = GeoName, year, government_payments_thousands)]
 
-write_parquet(arc_plc_detail, file.path(out_dir, "fsa_arc_plc_detail_2014_2018.parquet"), compression = "zstd")
-write_parquet(arc_plc_county, file.path(out_dir, "fsa_arc_plc_county_2014_2018.parquet"), compression = "zstd")
-write_parquet(bea, file.path(out_dir, "bea_county_government_payments_1969_2022.parquet"), compression = "zstd")
+write_parquet(arc_plc_detail, file.path(out_dir, "02a_fsa_arc_plc_detail_2014_2018.parquet"), compression = "zstd")
+write_parquet(arc_plc_county, file.path(out_dir, "02a_fsa_arc_plc_county_2014_2018.parquet"), compression = "zstd")
+write_parquet(bea, file.path(out_dir, "02a_bea_county_government_payments_1969_2022.parquet"), compression = "zstd")
 
 message("Wrote historical payment panels to ", out_dir)

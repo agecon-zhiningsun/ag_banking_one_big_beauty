@@ -8,11 +8,11 @@ suppressPackageStartupMessages({
 
 final_dir <- file.path(data_root, "processed", "nc1177")
 cache_dir <- file.path(data_root, "pipeline_cache", "nc1177")
-out_dir <- file.path("output", "tables", "obbba_channels")
+out_dir <- file.path("output", "tables", "04h_balance_sheet_channels")
 dir.create(out_dir, recursive = TRUE, showWarnings = FALSE)
 
 county <- as.data.table(read_parquet(file.path(
-  final_dir, "county_payment_retention_panel_1994_2025.parquet"
+  final_dir, "03c_county_payment_retention_panel_1994_2025.parquet"
 )))[, .(county_fips, year, total_fsa_payment_share_lag_deposits)]
 geo <- as.data.table(read_parquet(file.path(
   cache_dir, "sod", "county_bank_year_1994_2025.parquet"
@@ -27,7 +27,7 @@ exposure <- county[geo, on = .(county_fips, year), nomatch = 0L][, .(
 ), by = .(cert, year)]
 
 x <- as.data.table(read_parquet(file.path(
-  final_dir, "dynamic_bank_model", "bank_year_dynamic_model_inputs_1994_2025.parquet"
+  final_dir, "dynamic_bank_model", "03a_bank_year_dynamic_model_inputs_1994_2025.parquet"
 )))
 x <- merge(x, exposure, by = c("cert", "year"), all = FALSE)
 x <- x[year %between% c(2015L, 2025L) & is.finite(total_fsa_service_area_intensity)]
@@ -58,7 +58,7 @@ extract <- function(m, y) {
 estimates <- rbindlist(Map(extract, models, names(models)))
 
 shock <- as.data.table(read_parquet(file.path(
-  final_dir, "obbba_bellman_bank_shocks_2025.parquet"
+  final_dir, "04e_obbba_bellman_bank_shocks_2025.parquet"
 )))[actual_revenue_share == 0.85 & retention_case == "estimated_total_fsa"]
 shock <- merge(
   shock,
@@ -99,12 +99,12 @@ default_scenarios[, calibrated_chargeoff_change :=
 # OBBBA also raises Marketing Assistance Loan rates. Base acres are used only
 # as a transparent county/crop exposure proxy because MAL eligibility follows
 # current production, not base acreage; this is not a dollar-volume forecast.
-mal <- fread(file.path("docs", "obbba_marketing_assistance_loan_rates.csv"))
+mal <- fread(file.path("docs", "05f_obbba_marketing_assistance_loan_rates.csv"))
 base <- as.data.table(read_parquet(file.path(
-  final_dir, "obbba_arc_payment_simulation_inputs.parquet"
+  final_dir, "04d_obbba_arc_payment_simulation_inputs.parquet"
 )))[, .(county_fips, crop_key, base_acres = arc_base_acres)]
 plc_base <- as.data.table(read_parquet(file.path(
-  final_dir, "obbba_plc_payment_simulation_inputs.parquet"
+  final_dir, "04d_obbba_plc_payment_simulation_inputs.parquet"
 )))[, .(county_fips, crop_key, base_acres)]
 base <- rbindlist(list(base, plc_base), fill = TRUE)[is.finite(base_acres)]
 base <- base[, .(base_acres = sum(base_acres)), by = .(county_fips, crop_key)]
@@ -115,17 +115,17 @@ mal_exposure <- mal_exposure[, .(
   covered_base_acres = sum(base_acres)
 ), by = county_fips]
 
-fwrite(estimates, file.path(out_dir, "total_fsa_balance_sheet_channel_estimates.csv"))
+fwrite(estimates, file.path(out_dir, "04h_total_fsa_balance_sheet_channel_estimates.csv"))
 fwrite(default_scenarios[, .(
   banks = uniqueN(cert),
   mean_calibrated_chargeoff_change = mean(calibrated_chargeoff_change, na.rm = TRUE)
-), by = default_risk_case], file.path(out_dir, "default_risk_scenarios.csv"))
-fwrite(mal_exposure, file.path(out_dir, "county_marketing_assistance_loan_rate_exposure.csv"))
-write_parquet(shock, file.path(final_dir, "obbba_bank_balance_sheet_channel_shocks.parquet"),
+), by = default_risk_case], file.path(out_dir, "04h_default_risk_scenarios.csv"))
+fwrite(mal_exposure, file.path(out_dir, "04h_county_marketing_assistance_loan_rate_exposure.csv"))
+write_parquet(shock, file.path(final_dir, "04h_obbba_bank_balance_sheet_channel_shocks.parquet"),
               compression = "zstd")
-write_parquet(default_scenarios, file.path(final_dir, "obbba_bank_default_risk_scenarios.parquet"),
+write_parquet(default_scenarios, file.path(final_dir, "04h_obbba_bank_default_risk_scenarios.parquet"),
               compression = "zstd")
 writeLines(capture.output(etable(models)),
-           file.path(out_dir, "total_fsa_balance_sheet_channel_models.txt"))
+           file.path(out_dir, "04h_total_fsa_balance_sheet_channel_models.txt"))
 
 message("Estimated OBBBA balance-sheet channels and prepared default/MAL scenarios.")

@@ -11,9 +11,9 @@ suppressPackageStartupMessages({
 
 input_path <- file.path(
   data_root, "processed", "nc1177", "dynamic_bank_model",
-  "bank_year_dynamic_model_inputs_1994_2025.parquet"
+  "03a_bank_year_dynamic_model_inputs_1994_2025.parquet"
 )
-out_dir <- file.path("output", "tables", "dynamic_counterfactuals")
+out_dir <- file.path("output", "tables", "04b_dynamic_readiness")
 dir.create(out_dir, recursive = TRUE, showWarnings = FALSE)
 if (!file.exists(input_path)) stop("Construct the dynamic-model inputs first.")
 
@@ -83,8 +83,8 @@ readiness <- data.table(
   )
 )
 
-fwrite(shock_summary, file.path(out_dir, "farm_state_process.csv"))
-fwrite(historical_path, file.path(out_dir, "historical_downturn_2014_2019.csv"))
-fwrite(readiness, file.path(out_dir, "counterfactual_readiness.csv"))
+fwrite(shock_summary, file.path(out_dir, "04b_farm_state_process.csv"))
+fwrite(historical_path, file.path(out_dir, "04b_historical_downturn_2014_2019.csv"))
+fwrite(readiness, file.path(out_dir, "04b_counterfactual_readiness.csv"))
 
 message("Prepared observed farm shocks and audited dynamic-counterfactual readiness.")

@@ -2,11 +2,11 @@ suppressPackageStartupMessages({
   library(data.table)
 })
 
-in_dir <- file.path("output", "tables", "dynamic_bank_model")
-out_dir <- file.path("output", "tables", "obbba_counterfactuals")
+in_dir <- file.path("output", "tables", "04i_dynamic_model")
+out_dir <- file.path("output", "tables", "04j_policy_counterfactuals")
 dir.create(out_dir, recursive = TRUE, showWarnings = FALSE)
 
-x <- fread(file.path(in_dir, "wang_obbba_structural_counterfactuals.csv"))
+x <- fread(file.path(in_dir, "04i_wang_obbba_structural_counterfactuals.csv"))
 x[, `:=`(
   agricultural_loan_change_percent = 100 * pct_change_new_ag_loans_from_no_policy,
   loan_rate_change_basis_points = 10000 * change_loan_rate_from_no_policy,
@@ -34,7 +34,7 @@ compact <- x[, .(
   equilibrium_gap = NA_real_
 )]
 
-diag <- fread(file.path(in_dir, "wang_full_model_diagnostics.csv"))
+diag <- fread(file.path(in_dir, "04i_wang_full_model_diagnostics.csv"))
 diag[, bank_type := fifelse(
   agricultural_bank == 1, "agricultural_banks", "nonagricultural_banks"
 )]
@@ -64,7 +64,7 @@ implications <- data.table(
   )
 )
 
-fwrite(compact, file.path(out_dir, "obbba_structural_counterfactual_summary.csv"))
-fwrite(implications, file.path(out_dir, "farmer_policy_implications.csv"))
+fwrite(compact, file.path(out_dir, "04j_obbba_structural_counterfactual_summary.csv"))
+fwrite(implications, file.path(out_dir, "04j_farmer_policy_implications.csv"))
 
 message("Summarized OBBBA structural counterfactual and farmer implications.")

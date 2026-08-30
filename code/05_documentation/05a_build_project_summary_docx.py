@@ -6,7 +6,7 @@ from docx.oxml import OxmlElement
 from docx.oxml.ns import qn
 from pathlib import Path
 
-OUT = Path(r"C:\Users\zhini\Dropbox\ag_banking_one_big_beauty\docs\ag_banking_obbba_research_summary.docx")
+OUT = Path(r"C:\Users\zhini\Dropbox\ag_banking_one_big_beauty\docs\05g_ag_banking_obbba_research_summary.docx")
 
 doc = Document()
 sec = doc.sections[0]

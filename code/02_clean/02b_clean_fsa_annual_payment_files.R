@@ -70,11 +70,11 @@ county_year <- payments[, .(
   total_fsa_payments_dollars = sum(payment_dollars, na.rm = TRUE)
 ), by = .(county_fips, year = sod_year)]
 
-write_parquet(payments, file.path(out_dir, "fsa_county_program_payments_detail_2014_2025.parquet"), compression = "zstd")
-write_parquet(county_year, file.path(out_dir, "fsa_county_program_payments_2014_2025.parquet"), compression = "zstd")
+write_parquet(payments, file.path(out_dir, "02b_fsa_county_program_payments_detail_2014_2025.parquet"), compression = "zstd")
+write_parquet(county_year, file.path(out_dir, "02b_fsa_county_program_payments_2014_2025.parquet"), compression = "zstd")
 fwrite(payments[, .(
   payment_dollars = sum(payment_dollars), transactions = sum(transactions), counties = uniqueN(county_fips)
 ), by = .(payment_year, program_family)][order(payment_year, program_family)],
-file.path(out_dir, "fsa_program_payment_coverage_2014_2025.csv"))
+file.path(out_dir, "02b_fsa_program_payment_coverage_2014_2025.csv"))
 
 message("Wrote county-program aggregates to ", out_dir)

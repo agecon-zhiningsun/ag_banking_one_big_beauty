@@ -15,13 +15,13 @@ suppressPackageStartupMessages({
 
 input_path <- file.path(
   data_root, "processed", "nc1177", "dynamic_bank_model",
-  "bank_year_dynamic_model_inputs_1994_2025.parquet"
+  "03a_bank_year_dynamic_model_inputs_1994_2025.parquet"
 )
 external_dir <- file.path(data_root, "processed", "nc1177", "dynamic_bank_model")
-table_dir <- file.path("output", "tables", "dynamic_bank_model")
+table_dir <- file.path("output", "tables", "04i_dynamic_model")
 dir.create(external_dir, recursive = TRUE, showWarnings = FALSE)
 dir.create(table_dir, recursive = TRUE, showWarnings = FALSE)
-if (!file.exists(input_path)) stop("Run code/03_construct/06_construct_dynamic_bank_model_inputs.R first.")
+if (!file.exists(input_path)) stop("Run code/03_construct/03a_construct_dynamic_bank_model_inputs.R first.")
 
 x <- as.data.table(read_parquet(input_path))
 x <- x[
@@ -343,8 +343,8 @@ solve_type <- function(bank_type, theta, regime = "current_power",
   pol[]
 }
 
-channel_path <- file.path(external_dir, "..", "obbba_bank_balance_sheet_channel_shocks.parquet")
-lending_path <- file.path(external_dir, "..", "obbba_bank_lending_channel_simulation_2025.parquet")
+channel_path <- file.path(external_dir, "..", "04h_obbba_bank_balance_sheet_channel_shocks.parquet")
+lending_path <- file.path(external_dir, "..", "04g_obbba_bank_lending_channel_simulation_2025.parquet")
 if (!file.exists(channel_path) || !file.exists(lending_path)) {
   stop("Run OBBBA analysis scripts 15 and 16 before the Bellman counterfactuals.")
 }
@@ -363,8 +363,8 @@ type_shocks <- merge(
 type_shocks <- type_shocks[agricultural_bank %in% 0:1]
 
 mal_exposure <- fread(file.path(
-  "output", "tables", "obbba_channels",
-  "county_marketing_assistance_loan_rate_exposure.csv"
+  "output", "tables", "04h_balance_sheet_channels",
+  "04h_county_marketing_assistance_loan_rate_exposure.csv"
 ))
 mal_rate_increase <- weighted.mean(
   mal_exposure$mal_rate_increase_pct / 100,
@@ -472,13 +472,13 @@ diagnostics <- solution[, .(
   )
 ), by = .(scenario, agricultural_bank, regime, capital_requirement)]
 
-write_parquet(solution, file.path(external_dir, "wang_full_dynamic_policy_functions.parquet"),
+write_parquet(solution, file.path(external_dir, "04i_wang_full_dynamic_policy_functions.parquet"),
               compression = "zstd")
-fwrite(policy_results, file.path(table_dir, "wang_obbba_structural_counterfactuals.csv"))
-fwrite(parameter_table, file.path(table_dir, "wang_full_model_parameters.csv"))
-fwrite(diagnostics, file.path(table_dir, "wang_full_model_diagnostics.csv"))
-fwrite(as.data.table(P_f), file.path(table_dir, "wang_transition_federal_funds.csv"))
-fwrite(as.data.table(P_d), file.path(table_dir, "wang_transition_chargeoffs.csv"))
-fwrite(as.data.table(P_z), file.path(table_dir, "wang_transition_farm_income.csv"))
+fwrite(policy_results, file.path(table_dir, "04i_wang_obbba_structural_counterfactuals.csv"))
+fwrite(parameter_table, file.path(table_dir, "04i_wang_full_model_parameters.csv"))
+fwrite(diagnostics, file.path(table_dir, "04i_wang_full_model_diagnostics.csv"))
+fwrite(as.data.table(P_f), file.path(table_dir, "04i_wang_transition_federal_funds.csv"))
+fwrite(as.data.table(P_d), file.path(table_dir, "04i_wang_transition_chargeoffs.csv"))
+fwrite(as.data.table(P_z), file.path(table_dir, "04i_wang_transition_farm_income.csv"))
 
 message("Solved the corrected Wang-style OBBBA channel and market-power counterfactuals.")

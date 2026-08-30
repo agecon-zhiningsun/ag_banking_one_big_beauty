@@ -6,14 +6,14 @@ suppressPackageStartupMessages({
 })
 
 final_dir <- file.path(data_root, "processed", "nc1177")
-out_dir <- file.path("output", "tables", "obbba_bellman")
+out_dir <- file.path("output", "tables", "04e_bellman_inputs")
 dir.create(out_dir, recursive = TRUE, showWarnings = FALSE)
 
 shocks <- as.data.table(read_parquet(file.path(
-  final_dir, "obbba_bank_payment_deposit_scenarios.parquet"
+  final_dir, "04d_obbba_bank_payment_deposit_scenarios.parquet"
 )))
 bank <- as.data.table(read_parquet(file.path(
-  final_dir, "bank_year_market_power_inputs_1994_2025.parquet"
+  final_dir, "03b_bank_year_market_power_inputs_1994_2025.parquet"
 )))[year == 2025L]
 
 # Central dynamic input grid. The policy experiment now uses only the positive,
@@ -32,7 +32,7 @@ bellman[, `:=`(
 
 write_parquet(
   bellman,
-  file.path(final_dir, "obbba_bellman_bank_shocks_2025.parquet"),
+  file.path(final_dir, "04e_obbba_bellman_bank_shocks_2025.parquet"),
   compression = "zstd"
 )
 
@@ -43,7 +43,7 @@ summary <- bellman[, .(
   aggregate_predicted_deposit_change_thousands = sum(predicted_bank_deposit_change_thousands, na.rm = TRUE),
   mean_deposit_asset_ratio_change = mean(predicted_deposit_asset_ratio_change, na.rm = TRUE)
 ), by = .(actual_revenue_share, retention_case, retention_rate)]
-fwrite(summary, file.path(out_dir, "bellman_shock_summary.csv"))
+fwrite(summary, file.path(out_dir, "04e_bellman_shock_summary.csv"))
 
 counterfactuals <- data.table(
   counterfactual = c(
@@ -68,6 +68,6 @@ counterfactuals <- data.table(
     "coarse_grid_structural_calibration_complete"
   )
 )
-fwrite(counterfactuals, file.path(out_dir, "counterfactual_registry.csv"))
+fwrite(counterfactuals, file.path(out_dir, "04e_counterfactual_registry.csv"))
 
 message("Prepared OBBBA bank shocks and Bellman counterfactual registry.")

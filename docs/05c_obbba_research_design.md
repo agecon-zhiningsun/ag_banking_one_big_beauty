@@ -119,7 +119,7 @@ funding automatically raises farm lending.
 
 ## Current OBBBA exposure implementation
 
-`code/03_construct/12_construct_obbba_exposure.R` combines 2025 county-crop
+`code/03_construct/03d_construct_obbba_exposure.R` combines 2025 county-crop
 enrolled base acres with the statutory reference-price changes and the ARC
 guarantee increase from 86% to 90%. It creates county indices and maps them to
 banks with 2025 SOD geography. These are exposure indices, not predicted dollar
@@ -128,7 +128,7 @@ and realized ARC payments require county revenue. The additional 30 million
 base acres must remain a separate scenario until county allocations are final
 and publicly downloadable.
 
-`code/04_analysis/12_simulate_obbba_arc_plc_payments.R` uses official 2025
+`code/04_analysis/04d_simulate_obbba_arc_plc_payments.R` uses official 2025
 county PLC yields and enrolled acres, USDA's projected 2026 effective prices
 and PLC rates, and 2026 ARC benchmark revenues. PLC is compared with a
 pre-OBBBA statutory-floor counterfactual. ARC is simulated at actual revenue
@@ -138,7 +138,7 @@ mix and must be labeled a scenario rather than an official county allocation.
 
 ## Bellman integration status
 
-`code/04_analysis/13_prepare_obbba_bellman_counterfactuals.R` converts county
+`code/04_analysis/04e_prepare_obbba_bellman_inputs.R` converts county
 deposit changes into bank-specific percentage shocks using 2025 branch-deposit
 geography and creates Bellman-ready deposit-market-size multipliers. The
 counterfactual registry covers no policy, current market power, competitive

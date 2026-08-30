@@ -17,7 +17,7 @@ For ownership matrix `Ω` and share Jacobian `J`, implied margins solve
 m_t=-(\Omega_t\odot J_t')^{-1}s_t.
 \]
 
-The compact final results are in `output/tables/blp_final/final_blp_summary.csv`. Detailed bank-year estimates remain in the external processed-data store. The primary median margins are 0.161 percentage points for deposits, 1.009 percentage points for total loans, and 1.560 percentage points for agricultural-production loans.
+The compact final results are in `output/tables/04a_blp/04a_final_blp_summary.csv`. Detailed bank-year estimates remain in the external processed-data store. The primary median margins are 0.161 percentage points for deposits, 1.009 percentage points for total loans, and 1.560 percentage points for agricultural-production loans.
 
 ## Bellman equation
 

@@ -8,13 +8,13 @@ suppressPackageStartupMessages({
 
 final_dir <- file.path(data_root, "processed", "nc1177")
 cache_dir <- file.path(data_root, "pipeline_cache", "nc1177")
-out_dir <- file.path("output", "tables", "obbba_lending")
+out_dir <- file.path("output", "tables", "04g_lending")
 dir.create(out_dir, recursive = TRUE, showWarnings = FALSE)
 
 # Construct a bank service-area payment intensity using prior-year SOD county
 # weights. This does not allocate payments to particular bank customers.
 county <- as.data.table(read_parquet(file.path(
-  final_dir, "county_payment_retention_panel_1994_2025.parquet"
+  final_dir, "03c_county_payment_retention_panel_1994_2025.parquet"
 )))[, .(county_fips, year, total_fsa_payment_share_lag_deposits)]
 geo <- as.data.table(read_parquet(file.path(
   cache_dir, "sod", "county_bank_year_1994_2025.parquet"
@@ -33,7 +33,7 @@ exposure <- geo[, .(
 ), by = .(cert, year)]
 
 bank <- as.data.table(read_parquet(file.path(
-  final_dir, "bank_year_market_power_inputs_1994_2025.parquet"
+  final_dir, "03b_bank_year_market_power_inputs_1994_2025.parquet"
 )))
 panel <- merge(bank, exposure, by = c("cert", "year"), all = FALSE)
 panel <- panel[
@@ -82,7 +82,7 @@ estimates <- rbindlist(Map(extract, models, names(models)))
 # Dividing predicted deposit growth by beta_D recovers the same incremental-
 # payment/local-deposit intensity used in the central deposit experiment.
 shock <- as.data.table(read_parquet(file.path(
-  final_dir, "obbba_bellman_bank_shocks_2025.parquet"
+  final_dir, "04e_obbba_bellman_bank_shocks_2025.parquet"
 )))[actual_revenue_share == 0.85 & retention_case == "estimated_total_fsa"]
 beta_ag_balance <- estimates[outcome == "ag_loan_balance", estimate][1L]
 se_ag_balance <- estimates[outcome == "ag_loan_balance", std_error][1L]
@@ -142,14 +142,14 @@ simulation <- shock[, .(
   )
 ), by = bank_type]
 
-fwrite(estimates, file.path(out_dir, "total_fsa_lending_reduced_form_estimates.csv"))
-fwrite(simulation, file.path(out_dir, "obbba_lending_channel_simulation.csv"))
+fwrite(estimates, file.path(out_dir, "04g_total_fsa_lending_reduced_form_estimates.csv"))
+fwrite(simulation, file.path(out_dir, "04g_obbba_lending_channel_simulation.csv"))
 write_parquet(
   shock,
-  file.path(final_dir, "obbba_bank_lending_channel_simulation_2025.parquet"),
+  file.path(final_dir, "04g_obbba_bank_lending_channel_simulation_2025.parquet"),
   compression = "zstd"
 )
 writeLines(capture.output(etable(models)),
-           file.path(out_dir, "total_fsa_lending_reduced_form_models.txt"))
+           file.path(out_dir, "04g_total_fsa_lending_reduced_form_models.txt"))
 
 message("Estimated and simulated the total-FSA agricultural-lending channel.")

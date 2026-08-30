@@ -23,7 +23,7 @@ base[, `:=`(
   enrolled_base_acres = as.numeric(enrolled_base_acres)
 )]
 
-prices <- fread(file.path("docs", "obbba_plc_reference_prices.csv"))
+prices <- fread(file.path("docs", "05e_obbba_plc_reference_prices.csv"))
 prices[, crop_key := commodity]
 
 # FSA naming differs slightly from the statutory table.
@@ -78,16 +78,16 @@ bank <- mapped[, .(
   counties_served_2025 = uniqueN(county_fips)
 ), by = cert]
 
-write_parquet(base, file.path(out_dir, "obbba_crop_county_base_acre_inputs.parquet"), compression = "zstd")
-write_parquet(county, file.path(out_dir, "obbba_county_policy_exposure.parquet"), compression = "zstd")
-write_parquet(bank, file.path(out_dir, "obbba_bank_policy_exposure.parquet"), compression = "zstd")
+write_parquet(base, file.path(out_dir, "03d_obbba_crop_county_base_acre_inputs.parquet"), compression = "zstd")
+write_parquet(county, file.path(out_dir, "03d_obbba_county_policy_exposure.parquet"), compression = "zstd")
+write_parquet(bank, file.path(out_dir, "03d_obbba_bank_policy_exposure.parquet"), compression = "zstd")
 
-dir.create(file.path("output", "tables", "obbba_exposure"), recursive = TRUE, showWarnings = FALSE)
+dir.create(file.path("output", "tables", "03d_obbba_exposure"), recursive = TRUE, showWarnings = FALSE)
 fwrite(county[, .(
   counties = .N,
   total_enrolled_base_acres = sum(total_enrolled_base_acres, na.rm = TRUE),
   median_plc_reference_price_exposure = median(plc_reference_price_exposure, na.rm = TRUE),
   median_arc_guarantee_exposure = median(arc_guarantee_exposure, na.rm = TRUE)
-)], file.path("output", "tables", "obbba_exposure", "county_exposure_summary.csv"))
+)], file.path("output", "tables", "03d_obbba_exposure", "03d_county_exposure_summary.csv"))
 
 message("Wrote OBBBA county and bank exposure indices to ", out_dir)
