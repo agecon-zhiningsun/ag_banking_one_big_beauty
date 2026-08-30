@@ -1,0 +1,4 @@
+outcome,term,estimate,std_error,p_value,observations,interpretation
+ag_loan_balance,total_fsa_service_area_intensity,-0.761833877364607,0.294863146809112,0.00980740062447992,38984,descriptive bank service-area reduced form; not causal
+ag_loan_rate,total_fsa_service_area_intensity,2.2579353116814,1.88911011248134,0.23205942431104,38984,descriptive bank service-area reduced form; not causal
+total_loan_balance,total_fsa_service_area_intensity,-1.08077107983669,0.150870584915132,9.18815887109103e-13,38984,descriptive bank service-area reduced form; not causal

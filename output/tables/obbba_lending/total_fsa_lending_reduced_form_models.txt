@@ -1,0 +1,27 @@
+                                         ag_loan_balance
+Dependent Var.:                  log_ag_production_loans
+                                                        
+total_fsa_service_area_intensity      -0.7618** (0.2949)
+Fixed-Effects:                   -----------------------
+cert                                                 Yes
+year                                                 Yes
+________________________________ _______________________
+S.E.: Clustered                                 by: cert
+Observations                                      38,984
+R2                                               0.92503
+Within R2                                        0.00016
+
+                                            ag_loan_rate total_loan_balance
+Dependent Var.:                  ag_production_loan_rate    log_total_loans
+                                                                           
+total_fsa_service_area_intensity           2.258 (1.889) -1.081*** (0.1509)
+Fixed-Effects:                   ----------------------- ------------------
+cert                                                 Yes                Yes
+year                                                 Yes                Yes
+________________________________ _______________________ __________________
+S.E.: Clustered                                 by: cert           by: cert
+Observations                                      38,984             38,984
+R2                                               0.11339            0.98181
+Within R2                                        1.88e-5            0.00269
+---
+Signif. codes: 0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1

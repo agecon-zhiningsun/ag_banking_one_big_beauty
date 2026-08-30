@@ -1,0 +1,4 @@
+bank_type,banks,aggregate_baseline_ag_loans_thousands,aggregate_predicted_ag_loan_change_thousands,aggregate_predicted_ag_loan_pct,mean_predicted_ag_loan_pct,median_predicted_ag_loan_pct,mean_predicted_ag_loan_rate_change_basis_points
+nonagricultural_banks,3016,46056139.75,-106519.027561209,-0.231280841467415,-0.189049098364746,-0.0227790289089647,56.3056040996933
+agricultural_banks,940,40626968.25,-490072.577426216,-1.20627405522984,-1.30881894903904,-1.02928946913918,392.589509665015
+unmatched_bank_characteristics,81,0,0,0,-0.491259489237784,-0.0287635303266698,147.631918945501

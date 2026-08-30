@@ -96,6 +96,27 @@ is algebraically `0.0762 * incremental OBBBA payments`; the percentage form is
 retained for interpretation and the level form handles counties whose 2025 FSA
 baseline is zero.
 
+## Lending and farmer interpretation
+
+The deposit channel is a bank funding shock, not an assumption that deposits
+must be transformed one-for-one into agricultural loans. The project therefore
+estimates a second, bank-level reduced form relating agricultural-production
+loan balances and rates to total-FSA payment intensity in the bank's service
+area. This response combines three mechanisms: farmers may need less operating
+credit after receiving cash support, stronger repayment capacity may expand
+loan supply, and banks may replace wholesale funding or hold securities rather
+than immediately originate loans.
+
+The lending reduced form must be read together with the deposit result. A
+positive deposit response and negative agricultural-loan-balance response are
+economically compatible: farmer liquidity improves while short-run borrowing
+need falls. The estimated loan-rate response determines whether there is
+evidence of price pass-through. These estimates remain descriptive because FSA
+payments respond to adverse agricultural conditions. The structural Bellman
+stage will separately vary deposit market power, loan market power, and the
+capital constraint; it must not force the invalid conclusion that added bank
+funding automatically raises farm lending.
+
 ## Current OBBBA exposure implementation
 
 `code/03_construct/12_construct_obbba_exposure.R` combines 2025 county-crop

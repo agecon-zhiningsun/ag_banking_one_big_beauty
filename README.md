@@ -46,6 +46,7 @@ Expected external layout:
 6. Run `code/04_analysis/12_simulate_obbba_arc_plc_payments.R`.
 7. Run `code/04_analysis/13_prepare_obbba_bellman_counterfactuals.R`.
 8. Run `code/04_analysis/14_run_identified_deposit_policy_counterfactual.R`.
+9. Run `code/04_analysis/15_estimate_and_simulate_total_fsa_lending_channel.R`.
 
 This module keeps county-market and bank designs distinct. The county design
 relates policy payments to total deposits across all branches in a county. The
@@ -68,6 +69,10 @@ remain to be estimated before the full dynamic policy experiment is identified.
 The identified deposit-only comparison of no policy (A) with OBBBA under current
 market power (B) is reported in
 `output/tables/obbba_bellman/identified_deposit_policy_counterfactual.csv`.
+The corresponding descriptive agricultural-lending reduced form and central
+OBBBA simulation are in `output/tables/obbba_lending/`. This stage allows
+payments to reduce borrowing demand rather than assuming that every additional
+deposit dollar becomes a new farm loan.
 
 ## Current BLP results
 
