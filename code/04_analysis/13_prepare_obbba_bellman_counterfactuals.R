@@ -61,9 +61,11 @@ counterfactuals <- data.table(
   ),
   current_status = c(
     "reduced_form_deposit_counterfactual_complete",
-    "reduced_form_deposit_counterfactual_complete_bellman_pending",
-    "solver_change_required", "solver_change_required",
-    "solver_change_required", "solver_change_required"
+    "coarse_grid_structural_calibration_complete",
+    "coarse_grid_structural_calibration_complete",
+    "coarse_grid_structural_calibration_complete",
+    "coarse_grid_structural_calibration_complete",
+    "coarse_grid_structural_calibration_complete"
   )
 )
 fwrite(counterfactuals, file.path(out_dir, "counterfactual_registry.csv"))

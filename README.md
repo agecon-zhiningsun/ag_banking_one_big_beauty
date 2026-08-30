@@ -33,8 +33,7 @@ Expected external layout:
 2. Run `code/03_construct/07_construct_market_power_panels.R`.
 3. Run `code/04_analysis/09_estimate_final_blp.R`.
 4. Run `code/03_construct/06_construct_dynamic_bank_model_inputs.R`.
-5. Run `code/04_analysis/03_wang_full_dynamic_bank_model.R`.
-6. Run `code/04_analysis/10_prepare_dynamic_counterfactuals.R`.
+5. Run `code/04_analysis/10_prepare_dynamic_counterfactuals.R`.
 
 ### OBBBA policy-exposure module
 
@@ -47,6 +46,9 @@ Expected external layout:
 7. Run `code/04_analysis/13_prepare_obbba_bellman_counterfactuals.R`.
 8. Run `code/04_analysis/14_run_identified_deposit_policy_counterfactual.R`.
 9. Run `code/04_analysis/15_estimate_and_simulate_total_fsa_lending_channel.R`.
+10. Run `code/04_analysis/16_estimate_obbba_balance_sheet_channels.R`.
+11. Run `code/04_analysis/03_wang_full_dynamic_bank_model.R`.
+12. Run `code/04_analysis/17_summarize_obbba_structural_results.R`.
 
 This module keeps county-market and bank designs distinct. The county design
 relates policy payments to total deposits across all branches in a county. The
@@ -64,8 +66,11 @@ estimated retention coefficient to the corresponding payment-to-deposit shock;
 it does not use the insignificant program-family coefficients. OBBBA
 payment/deposit scenarios are in `output/tables/obbba_simulation/`.
 Bellman-ready bank shock inputs and the counterfactual registry are in
-`output/tables/obbba_bellman/`; borrower-demand and default-risk policy shocks
-remain to be estimated before the full dynamic policy experiment is identified.
+`output/tables/obbba_bellman/`. Historical service-area regressions estimate
+funding, capital and pricing responses. Because historical payment targeting
+prevents a credible default-risk estimate, the dynamic exercise reports zero,
+10-percent and 25-percent charge-off-reduction calibrations instead of treating
+the endogenous historical charge-off coefficient as causal.
 The identified deposit-only comparison of no policy (A) with OBBBA under current
 market power (B) is reported in
 `output/tables/obbba_bellman/identified_deposit_policy_counterfactual.csv`.
@@ -88,7 +93,15 @@ The primary specification follows Wang et al. and instruments loan rates with sa
 
 ## Dynamic model status
 
-The repository includes the Wang-style balance-sheet Bellman implementation, transition tables, parameters, diagnostics, and policy output. The cleaned audit in `output/tables/dynamic_counterfactuals/counterfactual_readiness.csv` is binding: the earlier competitive output is invalid because it scaled demand slopes incorrectly, and the risk/franchise counterfactual is not identified until an agricultural-franchise adjustment cost is estimated. Existing policy results remain illustrative rather than publication-ready estimates.
+The repository includes the Wang-style balance-sheet Bellman implementation,
+transition tables, parameters, diagnostics, and policy output. The invalid old
+competition shortcut that multiplied demand slopes has been removed. Competitive
+lending now fixes the loan rate at risk-adjusted marginal cost; competitive
+deposits use the avoided marginal wholesale-funding cost net of servicing and
+reserve carry. OBBBA channel, competition and capital counterfactuals have been
+run on a two-point bank-state grid. They are structural calibrations, not the
+full Wang simulated-minimum-distance estimation, and the reported competitor-
+rate equilibrium gaps remain material.
 
 See `docs/model.md` for the Bellman equation and `docs/data_requirements.md` for the complete input map.
 

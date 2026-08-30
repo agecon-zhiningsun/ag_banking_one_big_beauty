@@ -1,0 +1,7 @@
+channel,implemented_result,farmer_interpretation
+farmer liquidity,Historical total-FSA exposure predicts lower short-run agricultural borrowing demand.,Cash support can reduce operating-loan need even when bank liquidity rises.
+default risk,"Historical charge-off response is not identified; Bellman reports 0, 10 and 25 percent charge-off reductions.","Safer repayment can lower marginal loan cost, but magnitude is a sensitivity rather than an estimate."
+bank funding allocation,"Historical total-FSA exposure predicts less wholesale funding; Bellman allocates deposits among funding, securities and loans.",Additional deposits need not become farm loans; banks can replace wholesale funding or buy securities.
+loan market power,Agricultural BLP markups enter current-power pricing; competitive lending imposes risk-adjusted marginal cost.,Existing market power can retain cost savings; competitive lending produces much larger quantity pass-through.
+capital constraint,No-capital-constraint case re-solves all choices with the requirement set to zero.,Capital limits how aggressively a bank can convert funding and lower risk into lending.
+government credit substitution,OBBBA Marketing Assistance Loan rate increases shift the farmer outside option; the elasticity remains calibrated.,Higher government commodity-loan floors can crowd out commercial bank borrowing while improving farmer financing options.

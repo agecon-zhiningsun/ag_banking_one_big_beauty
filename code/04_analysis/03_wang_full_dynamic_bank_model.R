@@ -55,11 +55,11 @@ transition_matrix <- function(dt, state_name, nstate) {
 }
 
 # Discretized aggregate and bank states: f, delta, farm income, L, E.
-f_grid <- qgrid(x$funding_rate, c(0.20, 0.50, 0.80))
-d_grid <- qgrid(x$net_chargeoff_rate, c(0.20, 0.50, 0.80))
-l_grid <- qgrid(x$ag_production_loan_ratio, c(0.20, 0.50, 0.80))
-e_grid <- qgrid(x$capital_ratio, c(0.20, 0.50, 0.80))
-if (any(lengths(list(f_grid, d_grid, l_grid, e_grid)) < c(3, 3, 3, 3))) {
+f_grid <- qgrid(x$funding_rate, c(1 / 3, 2 / 3))
+d_grid <- qgrid(x$net_chargeoff_rate, c(1 / 3, 2 / 3))
+l_grid <- qgrid(x$ag_production_loan_ratio, c(1 / 3, 2 / 3))
+e_grid <- qgrid(x$capital_ratio, c(1 / 3, 2 / 3))
+if (any(lengths(list(f_grid, d_grid, l_grid, e_grid)) < c(2, 2, 2, 2))) {
   stop("Insufficient support for the Wang state grids.")
 }
 x[, `:=`(
@@ -150,19 +150,28 @@ logit_share <- function(own_utility, rival_utility, outside_utility, competitors
   exp_own / (exp(clip(outside_utility, -40, 40)) + exp_own + competitors * exp_rival)
 }
 
-solve_type <- function(bank_type, theta, competitive = FALSE,
-                       max_equilibrium_iter = 30L, max_value_iter = 150L,
-                       value_tolerance = 2e-5, equilibrium_tolerance = 2e-4) {
+solve_type <- function(bank_type, theta, regime = "current_power",
+                       policy_shock = list(
+                         deposit_market_size_multiplier = 1,
+                         loan_demand_utility_change = 0,
+                         default_rate_multiplier = 1,
+                         outside_credit_utility_change = 0
+                       ), capital_requirement = statutory$capital_requirement,
+                       max_equilibrium_iter = 4L, max_value_iter = 50L,
+                       value_tolerance = 1e-4, equilibrium_tolerance = 5e-4) {
   dm <- demand_by_type[agricultural_bank == bank_type][1]
   if (!nrow(dm)) stop("Missing BLP demand slopes for bank type ", bank_type)
   J <- 6L
   competitors <- J - 1L
   beta <- 1 / (1 + theta$discount_rate)
-  alpha_l <- if (competitive) dm$alpha_l * 100 else dm$alpha_l
-  alpha_d_mean <- if (competitive) dm$alpha_d * 100 else dm$alpha_d
+  competitive_loans <- regime %in% c("competitive_lending", "both_competitive")
+  competitive_deposits <- regime %in% c("competitive_deposits", "both_competitive")
+  alpha_l <- dm$alpha_l
+  alpha_d_mean <- dm$alpha_d
   alpha_d_draws <- pmax(alpha_d_mean + seq(-1, 1, length.out = 10L) * 0.615, 1e-4)
   loan_market_size <- dm$loan_ratio / pmax(dm$loan_share, 1e-8)
-  deposit_market_size <- dm$deposit_ratio / pmax(dm$deposit_share, 1e-8)
+  deposit_market_size <- dm$deposit_ratio / pmax(dm$deposit_share, 1e-8) *
+    policy_shock$deposit_market_size_multiplier
   loan_quality <- log(dm$loan_share / pmax(1 - J * dm$loan_share, 1e-8)) + alpha_l * dm$loan_rate
   deposit_quality <- log(dm$deposit_share / pmax(1 - J * dm$deposit_share, 1e-8)) -
     alpha_d_mean * dm$deposit_rate
@@ -182,20 +191,44 @@ solve_type <- function(bank_type, theta, competitive = FALSE,
       f <- f_grid[st$f_state]
       delta_base <- d_grid[st$d_state]
       farm_index <- c(-1, 0, 1)[st$farm_state]
-      delta <- clip(delta_base + farm_default_loading * farm_index, 0, statutory$maturity_rate)
+      delta <- clip(
+        (delta_base + farm_default_loading * farm_index) *
+          policy_shock$default_rate_multiplier,
+        0, statutory$maturity_rate
+      )
       L <- l_grid[st$l_state]
       E <- e_grid[st$e_state]
       comp_l <- rival_l[st$f_state, st$farm_state]
       comp_d <- rival_d[st$f_state, st$farm_state]
-      loan_rates <- clip(comp_l + c(-0.012, 0, 0.012), f + delta, 0.25)
-      deposit_rates <- clip(comp_d + c(-0.010, 0, 0.010), 0, 0.20)
+      # Competitive lending constrains price to risk-adjusted marginal cost.
+      # Competitive deposits use the zero-static-profit funding condition: the
+      # avoided marginal wholesale funding cost net of servicing and reserve
+      # carry. This replaces the invalid old shortcut that multiplied demand
+      # slopes by 100.
+      loan_rates <- if (competitive_loans) {
+        clip(f + delta + theta$loan_service_cost, 0, 0.25)
+      } else {
+        clip(comp_l + c(-0.012, 0, 0.012), f + delta, 0.25)
+      }
+      deposit_rates <- if (competitive_deposits) {
+        clip(f + theta$wholesale_cost - theta$deposit_service_cost -
+               statutory$reserve_requirement * f, 0, 0.20)
+      } else {
+        clip(comp_d + c(-0.010, 0, 0.010), 0, 0.20)
+      }
       payout_rates <- c(0, 0.35, 0.70)
       rows <- vector("list", length(loan_rates) * length(deposit_rates) * length(payout_rates))
       rr <- 0L
       for (rl in loan_rates) for (rd in deposit_rates) for (payout in payout_rates) {
-        l_own <- loan_quality - alpha_l * rl - farm_demand_loading * farm_index
-        l_rival <- loan_quality - alpha_l * comp_l - farm_demand_loading * farm_index
-        sl <- logit_share(l_own, l_rival, theta$no_borrow_quality, competitors)
+        l_own <- loan_quality - alpha_l * rl - farm_demand_loading * farm_index +
+          policy_shock$loan_demand_utility_change
+        l_rival <- loan_quality - alpha_l * comp_l - farm_demand_loading * farm_index +
+          policy_shock$loan_demand_utility_change
+        sl <- logit_share(
+          l_own, l_rival,
+          theta$no_borrow_quality + policy_shock$outside_credit_utility_change,
+          competitors
+        )
         B <- loan_market_size * sl
         sd_draws <- vapply(alpha_d_draws, function(a) {
           logit_share(deposit_quality + a * rd, deposit_quality + a * comp_d, 0, competitors)
@@ -213,11 +246,11 @@ solve_type <- function(bank_type, theta, competitive = FALSE,
           theta$fixed_operating_cost
         after_tax_profit <- profit * (1 - statutory$tax_rate)
         distributable <- pmax(E + after_tax_profit -
-                                statutory$capital_requirement * (L + B), 0)
+                                capital_requirement * (L + B), 0)
         C <- payout * distributable
         E_next <- E + after_tax_profit - C
         L_next <- (1 - statutory$maturity_rate) * (L + B)
-        feasible <- E_next >= statutory$capital_requirement * (L + B) &&
+        feasible <- E_next >= capital_requirement * (L + B) &&
           E_next > 0 && L_next > 0 && is.finite(profit)
         if (!feasible) next
         rr <- rr + 1L
@@ -284,15 +317,20 @@ solve_type <- function(bank_type, theta, competitive = FALSE,
     new_l <- matrix(updated_l$rate, nrow = length(f_grid), ncol = 3L)
     new_d <- matrix(updated_d$rate, nrow = length(f_grid), ncol = 3L)
     eq_gap <- max(abs(new_l - rival_l), abs(new_d - rival_d))
-    rival_l <- 0.8 * rival_l + 0.2 * new_l
-    rival_d <- 0.8 * rival_d + 0.2 * new_d
-    message("bank_type=", bank_type, " competitive=", competitive,
+    rival_l <- 0.5 * rival_l + 0.5 * new_l
+    rival_d <- 0.5 * rival_d + 0.5 * new_d
+    message("bank_type=", bank_type, " regime=", regime,
             " equilibrium_iteration=", eq_iter,
             " value_iterations=", vi, " equilibrium_gap=", signif(eq_gap, 4))
     if (eq_gap < equilibrium_tolerance) break
   }
   pol[, `:=`(
-    agricultural_bank = bank_type, competitive = competitive,
+    agricultural_bank = bank_type, regime = regime,
+    capital_requirement = capital_requirement,
+    deposit_market_size_multiplier = policy_shock$deposit_market_size_multiplier,
+    loan_demand_utility_change = policy_shock$loan_demand_utility_change,
+    default_rate_multiplier = policy_shock$default_rate_multiplier,
+    outside_credit_utility_change = policy_shock$outside_credit_utility_change,
     equilibrium_iterations = eq_iter, value_iterations = vi,
     equilibrium_gap = eq_gap,
     value_function = V[state_id],
@@ -305,17 +343,84 @@ solve_type <- function(bank_type, theta, competitive = FALSE,
   pol[]
 }
 
-baseline <- rbindlist(lapply(0:1, function(g) solve_type(g, theta, competitive = FALSE)))
-solution <- baseline
+channel_path <- file.path(external_dir, "..", "obbba_bank_balance_sheet_channel_shocks.parquet")
+lending_path <- file.path(external_dir, "..", "obbba_bank_lending_channel_simulation_2025.parquet")
+if (!file.exists(channel_path) || !file.exists(lending_path)) {
+  stop("Run OBBBA analysis scripts 15 and 16 before the Bellman counterfactuals.")
+}
+channel_shocks <- as.data.table(read_parquet(channel_path))
+lending_shocks <- as.data.table(read_parquet(lending_path))
+type_shocks <- merge(
+  channel_shocks[, .(
+    deposit_market_size_multiplier = 1 + mean(weighted_county_deposit_growth, na.rm = TRUE),
+    payment_intensity_shock = mean(payment_intensity_shock, na.rm = TRUE)
+  ), by = agricultural_bank],
+  lending_shocks[, .(
+    loan_demand_utility_change = mean(predicted_log_ag_loan_change, na.rm = TRUE)
+  ), by = agricultural_bank],
+  by = "agricultural_bank", all = TRUE
+)
+type_shocks <- type_shocks[agricultural_bank %in% 0:1]
 
-# Policy experiment: compare the same bank balance-sheet states under normal and
-# downturn farm income. Decomposition holds either demand or default at its
-# normal-state value, then compares with the joint downturn.
-summarize_policy <- function(dt, label) dt[, .(
-  scenario = label,
-  result_status = "illustrative_not_estimated",
-  assumed_demand_utility_change = -farm_demand_loading,
-  assumed_chargeoff_change = farm_default_loading,
+mal_exposure <- fread(file.path(
+  "output", "tables", "obbba_channels",
+  "county_marketing_assistance_loan_rate_exposure.csv"
+))
+mal_rate_increase <- weighted.mean(
+  mal_exposure$mal_rate_increase_pct / 100,
+  w = mal_exposure$covered_base_acres, na.rm = TRUE
+)
+mal_outside_utility_change <- log(1 + mal_rate_increase)
+
+scenario_specs <- data.table(
+  scenario = c(
+    "A_no_policy", "B_obbba_current_market_power",
+    "B1_deposit_funding_only", "B2_borrower_liquidity_only",
+    "B3_default_risk_only", "B4_marketing_loan_outside_credit_only",
+    "B5_obbba_no_default_effect", "B6_obbba_chargeoffs_down_25pct",
+    "C_obbba_competitive_deposits", "D_obbba_competitive_lending",
+    "E_obbba_both_markets_competitive", "F_obbba_no_capital_constraint"
+  ),
+  regime = c(
+    "current_power", "current_power", "current_power", "current_power",
+    "current_power", "current_power", "current_power", "current_power",
+    "competitive_deposits", "competitive_lending", "both_competitive", "current_power"
+  ),
+  use_deposit_shock = c(FALSE, TRUE, TRUE, FALSE, FALSE, FALSE, TRUE, TRUE, TRUE, TRUE, TRUE, TRUE),
+  use_demand_shock = c(FALSE, TRUE, FALSE, TRUE, FALSE, FALSE, TRUE, TRUE, TRUE, TRUE, TRUE, TRUE),
+  default_multiplier = c(1, .90, 1, 1, .90, 1, 1, .75, .90, .90, .90, .90),
+  use_outside_credit = c(FALSE, TRUE, FALSE, FALSE, FALSE, TRUE, TRUE, TRUE, TRUE, TRUE, TRUE, TRUE),
+  capital_requirement = c(rep(statutory$capital_requirement, 11), 0)
+)
+
+solve_scenario <- function(spec, bank_type) {
+  ts <- type_shocks[agricultural_bank == bank_type][1L]
+  ps <- list(
+    deposit_market_size_multiplier = if (spec$use_deposit_shock) {
+      ts$deposit_market_size_multiplier
+    } else 1,
+    loan_demand_utility_change = if (spec$use_demand_shock) {
+      ts$loan_demand_utility_change
+    } else 0,
+    default_rate_multiplier = spec$default_multiplier,
+    outside_credit_utility_change = if (spec$use_outside_credit) {
+      mal_outside_utility_change
+    } else 0
+  )
+  out <- solve_type(
+    bank_type, theta, regime = spec$regime, policy_shock = ps,
+    capital_requirement = spec$capital_requirement
+  )
+  out[, scenario := spec$scenario]
+  out
+}
+
+solution <- rbindlist(lapply(seq_len(nrow(scenario_specs)), function(i) {
+  rbindlist(lapply(0:1, function(g) solve_scenario(scenario_specs[i], g)))
+}))
+
+summarize_policy <- function(dt) dt[, .(
+  result_status = "structural_calibration_not_full_SMD_estimate",
   loan_rate = mean(loan_rate), deposit_rate = mean(deposit_rate),
   new_ag_loans = mean(new_loans), deposits = mean(deposits),
   wholesale_funding = mean(wholesale_funding), securities = mean(securities),
@@ -323,22 +428,25 @@ summarize_policy <- function(dt, label) dt[, .(
   loan_markup = mean(loan_markup), deposit_markdown = mean(deposit_markdown),
   bank_value = mean(value_function)
 ), by = .(
+  scenario,
   bank_type = fifelse(agricultural_bank == 1, "agricultural_banks", "nonagricultural_banks"),
-  competitive
+  regime, capital_requirement, deposit_market_size_multiplier,
+  loan_demand_utility_change, default_rate_multiplier,
+  outside_credit_utility_change
 )]
-normal <- summarize_policy(solution[farm_state == 2L], "normal_farm_income")
-downturn <- summarize_policy(solution[farm_state == 3L], "lower_farm_income")
-policy_results <- rbindlist(list(normal, downturn))
-setorder(policy_results, bank_type, competitive, scenario)
+policy_results <- summarize_policy(solution[farm_state == 2L])
+setorder(policy_results, bank_type, scenario)
 policy_results[, `:=`(
-  change_new_ag_loans_from_normal = new_ag_loans - new_ag_loans[scenario == "normal_farm_income"],
-  pct_change_new_ag_loans_from_normal = new_ag_loans /
-    new_ag_loans[scenario == "normal_farm_income"] - 1,
-  change_loan_rate_from_normal = loan_rate - loan_rate[scenario == "normal_farm_income"],
-  change_wholesale_funding_from_normal = wholesale_funding -
-    wholesale_funding[scenario == "normal_farm_income"],
-  change_next_equity_from_normal = next_equity - next_equity[scenario == "normal_farm_income"]
-), by = .(bank_type, competitive)]
+  change_new_ag_loans_from_no_policy = new_ag_loans - new_ag_loans[scenario == "A_no_policy"],
+  pct_change_new_ag_loans_from_no_policy = new_ag_loans /
+    new_ag_loans[scenario == "A_no_policy"] - 1,
+  change_loan_rate_from_no_policy = loan_rate - loan_rate[scenario == "A_no_policy"],
+  change_deposit_rate_from_no_policy = deposit_rate - deposit_rate[scenario == "A_no_policy"],
+  change_wholesale_funding_from_no_policy = wholesale_funding -
+    wholesale_funding[scenario == "A_no_policy"],
+  change_securities_from_no_policy = securities - securities[scenario == "A_no_policy"],
+  change_next_equity_from_no_policy = next_equity - next_equity[scenario == "A_no_policy"]
+), by = bank_type]
 
 parameter_table <- data.table(
   parameter = c(names(theta), names(statutory), "farm_demand_loading", "farm_default_loading",
@@ -360,17 +468,17 @@ diagnostics <- solution[, .(
       (deposits + wholesale_funding + e_grid[e_state])
   )),
   capital_constraint_violations = sum(
-    next_equity + 1e-10 < statutory$capital_requirement * (l_grid[l_state] + new_loans)
+    next_equity + 1e-10 < capital_requirement * (l_grid[l_state] + new_loans)
   )
-), by = .(agricultural_bank, competitive)]
+), by = .(scenario, agricultural_bank, regime, capital_requirement)]
 
 write_parquet(solution, file.path(external_dir, "wang_full_dynamic_policy_functions.parquet"),
               compression = "zstd")
-fwrite(policy_results, file.path(table_dir, "wang_farm_downturn_policy_results.csv"))
+fwrite(policy_results, file.path(table_dir, "wang_obbba_structural_counterfactuals.csv"))
 fwrite(parameter_table, file.path(table_dir, "wang_full_model_parameters.csv"))
 fwrite(diagnostics, file.path(table_dir, "wang_full_model_diagnostics.csv"))
 fwrite(as.data.table(P_f), file.path(table_dir, "wang_transition_federal_funds.csv"))
 fwrite(as.data.table(P_d), file.path(table_dir, "wang_transition_chargeoffs.csv"))
 fwrite(as.data.table(P_z), file.path(table_dir, "wang_transition_farm_income.csv"))
 
-message("Solved the full Wang-style balance-sheet model and farm-income policy experiment.")
+message("Solved the corrected Wang-style OBBBA channel and market-power counterfactuals.")

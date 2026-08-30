@@ -143,10 +143,19 @@ deposit changes into bank-specific percentage shocks using 2025 branch-deposit
 geography and creates Bellman-ready deposit-market-size multipliers. The
 counterfactual registry covers no policy, current market power, competitive
 deposits, competitive lending, both markets competitive, and no capital
-constraint. Only the deposit input is currently ready. Borrower loan-demand and
-default-risk shocks must be estimated before the full OBBBA Bellman solution is
-interpretable. Competitive cases also require corrected pricing constraints;
-the earlier demand-slope-times-100 shortcut remains prohibited.
+constraint. The borrower-liquidity reduced form, funding/capital equations,
+Marketing Assistance Loan outside-credit exposure and explicit default-risk
+sensitivities now enter the Bellman exercise. The old demand-slope-times-100
+shortcut has been removed. Competitive lending is constrained to risk-adjusted
+marginal cost, while competitive deposit pricing uses avoided marginal
+wholesale funding cost net of servicing and reserve carry.
+
+The resulting two-point-state-grid solutions are structural calibrations, not
+full SMD estimates. The Bellman residual and accounting constraints are tight,
+but competitor-rate fixed-point gaps remain approximately 0.002--0.012 across
+cases. Publication results require a finer grid, full equilibrium convergence,
+and estimation of the default and outside-credit elasticities from valid
+predetermined instruments.
 
 Do not use realized post-law payments alone as treatment; those payments respond to prices, yields and participation.
 

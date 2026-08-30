@@ -1,7 +1,7 @@
 counterfactual,required_change,current_status
 A_no_policy,Set deposit and borrower policy shocks to zero.,reduced_form_deposit_counterfactual_complete
-B_obbba_current_market_power,Apply the estimated total-FSA deposit-market-size shock; this is the identified deposit-only policy experiment.,reduced_form_deposit_counterfactual_complete_bellman_pending
-C_obbba_competitive_deposits,Apply OBBBA and impose the correctly derived competitive deposit-pricing condition.,solver_change_required
-D_obbba_competitive_lending,Apply OBBBA and constrain the loan rate to risk-adjusted marginal cost.,solver_change_required
-E_obbba_both_markets_competitive,Impose both competitive pricing conditions and re-solve.,solver_change_required
-F_obbba_no_capital_constraint,Apply OBBBA while relaxing the capital constraint and re-solve.,solver_change_required
+B_obbba_current_market_power,Apply the estimated total-FSA deposit-market-size shock; this is the identified deposit-only policy experiment.,coarse_grid_structural_calibration_complete
+C_obbba_competitive_deposits,Apply OBBBA and impose the correctly derived competitive deposit-pricing condition.,coarse_grid_structural_calibration_complete
+D_obbba_competitive_lending,Apply OBBBA and constrain the loan rate to risk-adjusted marginal cost.,coarse_grid_structural_calibration_complete
+E_obbba_both_markets_competitive,Impose both competitive pricing conditions and re-solve.,coarse_grid_structural_calibration_complete
+F_obbba_no_capital_constraint,Apply OBBBA while relaxing the capital constraint and re-solve.,coarse_grid_structural_calibration_complete

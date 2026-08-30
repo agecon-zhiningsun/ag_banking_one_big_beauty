@@ -1,0 +1,4 @@
+default_risk_case,banks,mean_calibrated_chargeoff_change
+chargeoffs_down_10pct,4037,-0.000817243030785899
+chargeoffs_down_25pct,4037,-0.00204310757696475
+no_default_effect,4037,0

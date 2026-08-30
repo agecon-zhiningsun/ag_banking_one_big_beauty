@@ -1,0 +1,66 @@
+                                 net_chargeoff_rate
+Dependent Var.:                  net_chargeoff_rate
+                                                   
+total_fsa_service_area_intensity    0.0101 (0.0077)
+Fixed-Effects:                   ------------------
+cert                                            Yes
+year                                            Yes
+________________________________ __________________
+S.E.: Clustered                            by: cert
+Observations                                 23,586
+R2                                          0.55230
+Within R2                                   0.00017
+
+                                 wholesale_funding_asset_ratio
+Dependent Var.:                  wholesale_funding_asset_ratio
+                                                              
+total_fsa_service_area_intensity             -0.0336. (0.0182)
+Fixed-Effects:                   -----------------------------
+cert                                                       Yes
+year                                                       Yes
+________________________________ _____________________________
+S.E.: Clustered                                       by: cert
+Observations                                            23,586
+R2                                                     0.71863
+Within R2                                              0.00025
+
+                                 cash_reserve_asset_ratio      capital_ratio
+Dependent Var.:                  cash_reserve_asset_ratio      capital_ratio
+                                                                            
+total_fsa_service_area_intensity         -0.0346 (0.0337) 0.0390*** (0.0093)
+Fixed-Effects:                   ------------------------ ------------------
+cert                                                  Yes                Yes
+year                                                  Yes                Yes
+________________________________ ________________________ __________________
+S.E.: Clustered                                  by: cert           by: cert
+Observations                                       23,586             23,586
+R2                                                0.77321            0.81493
+Within R2                                         0.00011            0.00130
+
+                                    blp_ag_markup blp_deposit_markdown
+Dependent Var.:                     blp_ag_markup blp_deposit_markdown
+                                                                      
+total_fsa_service_area_intensity -0.5392 (0.4999)  -6.61e-6* (3.12e-6)
+Fixed-Effects:                   ---------------- --------------------
+cert                                          Yes                  Yes
+year                                          Yes                  Yes
+________________________________ ________________ ____________________
+S.E.: Clustered                          by: cert             by: cert
+Observations                               23,586               23,586
+R2                                        0.18417              0.99100
+Within R2                                 0.00021              0.00012
+
+                                       deposit_rate
+Dependent Var.:                        deposit_rate
+                                                   
+total_fsa_service_area_intensity 0.0055*** (0.0015)
+Fixed-Effects:                   ------------------
+cert                                            Yes
+year                                            Yes
+________________________________ __________________
+S.E.: Clustered                            by: cert
+Observations                                 23,586
+R2                                          0.89416
+Within R2                                   0.00093
+---
+Signif. codes: 0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
