@@ -1,0 +1,15 @@
+                                              total_model         arc_model
+Dependent Var.:                            deposit_growth    deposit_growth
+                                                                           
+government_payment_share_lag_deposits -0.0517*** (0.0134)                  
+arc_plc_payment_share_lag_deposits                        -0.1615* (0.0727)
+Fixed-Effects:                        ------------------- -----------------
+county_fips                                           Yes               Yes
+year                                                  Yes               Yes
+_____________________________________ ___________________ _________________
+S.E.: Clustered                           by: county_fips   by: county_fips
+Observations                                       74,855            11,926
+R2                                                0.23625           0.27830
+Within R2                                         0.00034           0.00068
+---
+Signif. codes: 0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1

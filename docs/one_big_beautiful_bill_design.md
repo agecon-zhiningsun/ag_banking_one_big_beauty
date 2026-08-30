@@ -35,6 +35,48 @@ Exposure_c=\sum_k Share_{ck,pre}\times \Delta Support_k,
 
 where `ΔSupport` separately measures reference-price changes, marketing-loan-rate changes, added-base-acre eligibility and insurance subsidy changes. Aggregate county exposure to banks with pre-2025 branch-deposit weights or, preferably, loan geography.
 
+## Historical payment-retention identification
+
+Do not allocate county ARC/PLC payments to individual banks. The preferred
+deposit first stage aggregates SOD deposits over all branches in a county and
+estimates whether the county deposit stock changes with payments. This outcome
+includes nonfarm accounts, so the coefficient is a local-market reduced-form
+retention rate rather than a farmer-level propensity to save.
+
+For bank balance-sheet outcomes, construct a shift-share exposure using the
+bank's prior-year SOD county deposit shares. Call Report agricultural and total
+loans are located at the bank, not at the borrower county, so this is a
+service-area exposure and must be labeled accordingly.
+
+Estimate program families separately:
+
+- ARC/PLC identifies recurring commodity-safety-net exposure.
+- MFP identifies an exceptional trade-assistance shock.
+- CFAP identifies an exceptional pandemic-assistance shock.
+- BEA total government payments provide the long county panel and an omnibus
+  robustness measure, but should not replace the program-specific estimates.
+
+Pooling MFP and CFAP into ARC/PLC without separate indicators is inappropriate:
+their timing, eligibility and spending motives differ. A pooled total-payment
+coefficient is useful only as a secondary reduced-form calibration.
+
+The naive county/year fixed-effect estimates currently have negative signs.
+That is evidence that contemporaneous payment levels are endogenous to weak
+farm conditions and that June SOD timing is imperfect; it is not evidence that
+farmers literally withdraw more than the payment. Publication estimates need
+predetermined simulated eligibility/payment instruments and timing checks.
+
+## Current OBBBA exposure implementation
+
+`code/03_construct/12_construct_obbba_exposure.R` combines 2023 county-crop
+enrolled base acres with the statutory reference-price changes and the ARC
+guarantee increase from 86% to 90%. It creates county indices and maps them to
+banks with 2025 SOD geography. These are exposure indices, not predicted dollar
+payments: realized PLC payments require market-year prices and program yields,
+and realized ARC payments require county revenue. The additional 30 million
+base acres must remain a separate scenario until county allocations are final
+and publicly downloadable.
+
 Do not use realized post-law payments alone as treatment; those payments respond to prices, yields and participation.
 
 ### Reduced-form validation
@@ -93,4 +135,3 @@ The paper studies how monetary policy reaches generic borrowers through imperfec
 - The policy can simultaneously reduce credit risk and crowd out bank lending.
 - The current dynamic results are illustrative until SMD estimation is completed.
 - Report distributional effects by farm type, county exposure, bank size, agricultural-bank status and FCS presence.
-

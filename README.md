@@ -36,6 +36,21 @@ Expected external layout:
 5. Run `code/04_analysis/03_wang_full_dynamic_bank_model.R`.
 6. Run `code/04_analysis/10_prepare_dynamic_counterfactuals.R`.
 
+### OBBBA policy-exposure module
+
+1. Run `code/01_download/01_download_policy_exposure_data.R`.
+2. Run `code/02_clean/01_clean_historical_policy_payments.R`.
+3. Run `code/03_construct/11_construct_payment_retention_panels.R`.
+4. Run `code/04_analysis/11_estimate_payment_retention.R`.
+5. Run `code/03_construct/12_construct_obbba_exposure.R`.
+
+This module keeps county-market and bank designs distinct. The county design
+relates policy payments to total deposits across all branches in a county. The
+bank design uses prior-year SOD deposit geography to construct service-area
+exposure; it does not assign county payments to individual banks or assume that
+all bank depositors are farmers. The first-pass fixed-effect estimates in
+`output/tables/payment_retention/` are diagnostics, not causal estimates.
+
 ## Current BLP results
 
 The cleaned final BLP estimates cover 1994–2025 and are empirical outputs synchronized from the Dropbox `ag-lending-competition` project.

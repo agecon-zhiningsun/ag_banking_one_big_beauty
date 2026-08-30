@@ -1,0 +1,3 @@
+specification,term,estimate,std_error,p_value,observations,counties
+"BEA total government payments, county and year FE",government_payment_share_lag_deposits,-0.0516495272825819,0.0133864562336748,0.000116778785422014,74855,2754
+"FSA ARC/PLC payments, 2014-2018, county and year FE",arc_plc_payment_share_lag_deposits,-0.161490787993661,0.0726558040121373,0.0263252561379294,11926,2532
