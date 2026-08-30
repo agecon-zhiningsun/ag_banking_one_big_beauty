@@ -60,15 +60,29 @@ Pooling MFP and CFAP into ARC/PLC without separate indicators is inappropriate:
 their timing, eligibility and spending motives differ. A pooled total-payment
 coefficient is useful only as a secondary reduced-form calibration.
 
-The naive county/year fixed-effect estimates currently have negative signs.
-That is evidence that contemporaneous payment levels are endogenous to weak
-farm conditions and that June SOD timing is imperfect; it is not evidence that
+The long BEA total-payment estimate is negative, while the separate FSA
+program-family estimates are imprecise and not statistically different from
+zero. This is evidence that contemporaneous payments are endogenous to weak
+farm conditions and that timing remains difficult; it is not evidence that
 farmers literally withdraw more than the payment. Publication estimates need
 predetermined simulated eligibility/payment instruments and timing checks.
 
+The implemented annual FSA file pipeline now covers payment windows associated
+with 2014-2023 disbursement files. ARC/PLC disbursements first appear in 2015;
+there is no valid ARC/PLC series for 1994-2013 because the program did not yet
+exist. BEA total government payments provide the longer 1994-2022 overlap with
+SOD deposits. Payments are aligned to June SOD years: July-December payments
+are assigned to the following June observation.
+
+Separate diagnostic coefficients are reported for ARC/PLC, MFP, CFAP and total
+government payments. The current program-specific point estimates are not
+statistically different from zero, so the simulation reports zero, estimated,
+10-percent and 25-percent deposit-retention cases instead of presenting the
+naive point estimate as established behavior.
+
 ## Current OBBBA exposure implementation
 
-`code/03_construct/12_construct_obbba_exposure.R` combines 2023 county-crop
+`code/03_construct/12_construct_obbba_exposure.R` combines 2025 county-crop
 enrolled base acres with the statutory reference-price changes and the ARC
 guarantee increase from 86% to 90%. It creates county indices and maps them to
 banks with 2025 SOD geography. These are exposure indices, not predicted dollar
@@ -76,6 +90,14 @@ payments: realized PLC payments require market-year prices and program yields,
 and realized ARC payments require county revenue. The additional 30 million
 base acres must remain a separate scenario until county allocations are final
 and publicly downloadable.
+
+`code/04_analysis/12_simulate_obbba_arc_plc_payments.R` uses official 2025
+county PLC yields and enrolled acres, USDA's projected 2026 effective prices
+and PLC rates, and 2026 ARC benchmark revenues. PLC is compared with a
+pre-OBBBA statutory-floor counterfactual. ARC is simulated at actual revenue
+equal to 70, 80, 85, 90 and 100 percent of benchmark revenue. The 30-million-
+acre case is allocated proportionally to the observed 2025 county/crop/program
+mix and must be labeled a scenario rather than an official county allocation.
 
 Do not use realized post-law payments alone as treatment; those payments respond to prices, yields and participation.
 

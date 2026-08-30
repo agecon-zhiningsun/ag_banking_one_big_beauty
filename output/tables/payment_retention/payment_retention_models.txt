@@ -1,15 +1,49 @@
-                                              total_model         arc_model
-Dependent Var.:                            deposit_growth    deposit_growth
-                                                                           
-government_payment_share_lag_deposits -0.0517*** (0.0134)                  
-arc_plc_payment_share_lag_deposits                        -0.1615* (0.0727)
-Fixed-Effects:                        ------------------- -----------------
-county_fips                                           Yes               Yes
-year                                                  Yes               Yes
-_____________________________________ ___________________ _________________
-S.E.: Clustered                           by: county_fips   by: county_fips
-Observations                                       74,855            11,926
-R2                                                0.23625           0.27830
-Within R2                                         0.00034           0.00068
+                                             total_model       arc_model
+Dependent Var.:                           deposit_growth  deposit_growth
+
+government_payment_share_lag_deposits -0.0441** (0.0138)
+arc_plc_payment_share_lag_deposits                       0.0113 (0.0563)
+mfp_payment_share_lag_deposits
+cfap_payment_share_lag_deposits
+Fixed-Effects:                        ------------------ ---------------
+county_fips                                          Yes             Yes
+year                                                 Yes             Yes
+_____________________________________ __________________ _______________
+S.E.: Clustered                          by: county_fips by: county_fips
+Observations                                      75,093          30,914
+R2                                               0.22876         0.43050
+Within R2                                        0.00023         1.55e-6
+
+                                            mfp_model       cfap_model
+Dependent Var.:                        deposit_growth   deposit_growth
+
+government_payment_share_lag_deposits
+arc_plc_payment_share_lag_deposits
+mfp_payment_share_lag_deposits        0.0323 (0.1245)
+cfap_payment_share_lag_deposits                       -0.3284 (0.2398)
+Fixed-Effects:                        --------------- ----------------
+county_fips                                       Yes              Yes
+year                                              Yes              Yes
+_____________________________________ _______________ ________________
+S.E.: Clustered                       by: county_fips  by: county_fips
+Observations                                   15,420           15,306
+R2                                            0.48796          0.55372
+Within R2                                     4.39e-6          0.00020
+
+                                           joint_model
+Dependent Var.:                         deposit_growth
+
+government_payment_share_lag_deposits
+arc_plc_payment_share_lag_deposits     0.0141 (0.0355)
+mfp_payment_share_lag_deposits        -0.0367 (0.0312)
+cfap_payment_share_lag_deposits        0.0846 (0.1064)
+Fixed-Effects:                        ----------------
+county_fips                                        Yes
+year                                               Yes
+_____________________________________ ________________
+S.E.: Clustered                        by: county_fips
+Observations                                    31,227
+R2                                             0.42894
+Within R2                                      0.00011
 ---
 Signif. codes: 0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1

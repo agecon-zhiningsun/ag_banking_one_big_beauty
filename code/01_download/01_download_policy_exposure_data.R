@@ -32,6 +32,18 @@ download_once(
   file.path(raw_dir, "fsa_arc_plc", "2023_enrolled_base_county_crop_program.xlsx")
 )
 
+obbba_inputs <- c(
+  `2025_PLC_yields_base.xlsx` = "https://www.fsa.usda.gov/sites/default/files/2025-04/plc_county_yields_py2025.xlsx",
+  `2025_enrolled_base_county_crop_program.xlsx` = "https://www.fsa.usda.gov/sites/default/files/2026-01/2025_enrolled_base_county_crop_program%20%282026-01-14%29.xlsx",
+  `2026_MYA.xlsx` = "https://www.fsa.usda.gov/sites/default/files/2026-08/2026_MYA_1.xlsx",
+  `2026_ERP.xlsx` = "https://www.fsa.usda.gov/sites/default/files/2026-08/2026_ERP_0.xlsx",
+  `2026_PLC.xlsx` = "https://www.fsa.usda.gov/sites/default/files/2026-08/2026_PLC_0.xlsx",
+  `2026_ARCCO.xlsx` = "https://www.fsa.usda.gov/sites/default/files/2026-01/arcco_2026_data%20%282026-01-16%29.xlsx"
+)
+for (file_name in names(obbba_inputs)) {
+  download_once(obbba_inputs[[file_name]], file.path(raw_dir, "fsa_arc_plc", file_name))
+}
+
 # CAINC45 is BEA's historical county farm-income-and-expense table. Line 130 is
 # total government payments to farm operators. BEA discontinued this detailed
 # county table after 2022, so the archive is intentionally versioned here.
@@ -39,5 +51,26 @@ download_once(
   "https://apps.bea.gov/regional/zip/CAINC45.zip",
   file.path(raw_dir, "bea", "CAINC45.zip")
 )
+
+# Recipient-level FSA annual payment files are used only to recover non-identifying
+# county-program aggregates for ARC/PLC and MFP. The current FSA page lists the
+# 2014-2023 files first (88 workbooks in the page ordering as retrieved in 2026).
+payment_page <- paste0(
+  "https://www.fsa.usda.gov/tools/informational/freedom-information-act-foia/",
+  "electronic-reading-room/frequently-requested/payment-files"
+)
+page <- paste(readLines(payment_page, warn = FALSE), collapse = "\n")
+hrefs <- unique(regmatches(page, gregexpr(
+  'href="[^"]+\\.(xlsx|xls)"', page, ignore.case = TRUE
+))[[1L]])
+hrefs <- sub('^href="|"$', "", hrefs)
+if (length(hrefs) < 88L) stop("FSA payment-file page layout changed; found only ", length(hrefs), " workbooks")
+payment_dir <- file.path(raw_dir, "fsa_payment_files")
+dir.create(payment_dir, recursive = TRUE, showWarnings = FALSE)
+for (href in hrefs[seq_len(88L)]) {
+  url <- if (grepl("^https?://", href)) href else paste0("https://www.fsa.usda.gov", href)
+  destination <- file.path(payment_dir, utils::URLdecode(basename(href)))
+  download_once(url, destination)
+}
 
 message("Policy source files are present in ", raw_dir)

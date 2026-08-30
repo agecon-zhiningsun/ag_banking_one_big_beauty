@@ -1,3 +1,8 @@
 specification,term,estimate,std_error,p_value,observations,counties
-"BEA total government payments, county and year FE",government_payment_share_lag_deposits,-0.0516495272825819,0.0133864562336748,0.000116778785422014,74855,2754
-"FSA ARC/PLC payments, 2014-2018, county and year FE",arc_plc_payment_share_lag_deposits,-0.161490787993661,0.0726558040121373,0.0263252561379294,11926,2532
+"BEA total government payments, county and year FE",government_payment_share_lag_deposits,-0.0440785751312424,0.013799639744224,0.00141810824477347,75093,2754
+"FSA ARC/PLC disbursements, 2015-2024 SOD windows",arc_plc_payment_share_lag_deposits,0.0113283018552372,0.0563275544331754,0.840621621067954,30914,3204
+"FSA MFP disbursements, 2018-2022 SOD windows",mfp_payment_share_lag_deposits,0.032308357364045,0.124491816006982,0.795249267552976,15420,3198
+"FSA CFAP disbursements, 2020-2024 SOD windows",cfap_payment_share_lag_deposits,-0.328418039703808,0.239777104792131,0.170882921950022,15306,3195
+"Joint FSA program-family model, 2015-2024",arc_plc_payment_share_lag_deposits,0.0141539956037423,0.0355502655650353,0.69055325888687,31227,3204
+"Joint FSA program-family model, 2015-2024",mfp_payment_share_lag_deposits,-0.0366614952527723,0.0311894252862406,0.239903566797182,31227,3204
+"Joint FSA program-family model, 2015-2024",cfap_payment_share_lag_deposits,0.0845728234110112,0.10640291464225,0.426768035789156,31227,3204
