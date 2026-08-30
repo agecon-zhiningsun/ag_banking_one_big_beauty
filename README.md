@@ -117,3 +117,4 @@ See `docs/05b_model.md` for the Bellman equation and `docs/05a_data_requirements
 
 - `docs/05d_wang_paper_recheck.md` compares this implementation with Wang, Whited, Wu, and Xiao.
 - `docs/05c_obbba_research_design.md` maps the 2025 law into estimable agricultural-credit shocks and counterfactuals.
+- `docs/05i_literature_review_and_contribution.md` positions the farmer-welfare and bank-risk contribution relative to the farm-support literature.
