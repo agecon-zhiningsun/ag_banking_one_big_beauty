@@ -259,5 +259,3 @@ fwrite(
 
 message("Constructed ", format(nrow(model_panel), big.mark = ","),
         " bank-year observations for the national dynamic model.")
-
-

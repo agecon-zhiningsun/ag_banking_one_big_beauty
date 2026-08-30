@@ -374,5 +374,3 @@ fwrite(as.data.table(P_d), file.path(table_dir, "wang_transition_chargeoffs.csv"
 fwrite(as.data.table(P_z), file.path(table_dir, "wang_transition_farm_income.csv"))
 
 message("Solved the full Wang-style balance-sheet model and farm-income policy experiment.")
-
-

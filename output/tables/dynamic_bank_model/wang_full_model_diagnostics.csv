@@ -1,5 +1,3 @@
 agricultural_bank,competitive,states,feasible_share,equilibrium_iterations,equilibrium_gap,value_iterations,bellman_residual,balance_sheet_error,capital_constraint_violations
 0,FALSE,243,1,30,0.000209459514618732,1,1.15045117550228e-05,1.11022302462516e-16,0
 1,FALSE,243,1,30,0.00243615280949593,2,1.88607589397538e-05,1.11022302462516e-16,0
-
-

@@ -46,7 +46,10 @@ branches <- sod[!is.na(cert), .(branches = .N), by = .(cert = as.integer(cert), 
 
 keep <- c("cert", "year", "bank_name", "state", "agricultural_bank", "asset", "dep",
           "lnlsgr", "lnag", "total_ag_loans", "quarters_observed", "avg_dep",
-          "avg_lnlsgr", "avg_lnag")
+          "avg_lnlsgr", "avg_lnag", "equity_asset_ratio", "core_deposit_ratio",
+          "gross_loans_asset_ratio", "real_estate_loans_asset_ratio",
+          "ci_loans_asset_ratio", "consumer_loans_asset_ratio",
+          "ag_loans_total_loan_ratio")
 panel <- merge(bank[, ..keep], cost[, !"report_date"], by = c("cert", "year"), all.x = TRUE)
 panel <- merge(panel, branches, by = c("cert", "year"), all.x = TRUE)
 panel[is.na(branches), branches := 0L]
@@ -58,6 +61,7 @@ panel[, `:=`(
   ),
   salary_cost_instrument = fifelse(asset > 0, salary_expense / asset, NA_real_),
   premises_cost_instrument = fifelse(asset > 0, premises_expense / asset, NA_real_),
+  log_assets = fifelse(asset > 0, log(asset), NA_real_),
   log_branches = log1p(branches),
   employees_per_branch = fifelse(branches > 0 & employees > 0, employees / branches, NA_real_)
 )]
@@ -134,5 +138,3 @@ write_parquet(panel, file.path(final_dir, "bank_year_market_power_inputs_1994_20
 fwrite(panel[, .(rows = .N, banks = uniqueN(cert)), by = year],
        file.path(out_dir, "market_power_panel_coverage.csv"))
 message("Wrote NC1177 market-power panel to: ", final_dir)
-
-

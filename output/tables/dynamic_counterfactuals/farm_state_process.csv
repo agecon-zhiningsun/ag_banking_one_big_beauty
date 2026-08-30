@@ -1,0 +1,5 @@
+object,estimate,interpretation
+farm_state_intercept,-0.0397310102020196,Intercept in the annual AR(1) farm-state process
+farm_state_persistence,0.121637822443927,Persistence of the annual farm-state process
+farm_state_innovation_sd,0.985238938787316,One-standard-deviation standardized farm-state innovation
+farm_income_innovation_p10,-0.168189333864183,Empirical tenth-percentile real-farm-income innovation

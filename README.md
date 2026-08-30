@@ -31,25 +31,26 @@ Expected external layout:
 
 1. Run the upstream download and cleaning stages in `/ag-lending-competition` if the external data store is not already populated.
 2. Run `code/03_construct/07_construct_market_power_panels.R`.
-3. Install `code/04_analysis/requirements.txt`, then run `code/04_analysis/02_estimate_ag_production_deposit_rc_blp.py`.
+3. Run `code/04_analysis/09_estimate_final_blp.R`.
 4. Run `code/03_construct/06_construct_dynamic_bank_model_inputs.R`.
 5. Run `code/04_analysis/03_wang_full_dynamic_bank_model.R`.
+6. Run `code/04_analysis/10_prepare_dynamic_counterfactuals.R`.
 
 ## Current BLP results
 
-The tracked agricultural-production BLP estimates cover 1994–2025 and are empirical outputs copied from the reference project, not synthetic examples.
+The cleaned final BLP estimates cover 1994–2025 and are empirical outputs synchronized from the Dropbox `ag-lending-competition` project.
 
-| Sample | Observations | Banks | Mean structural margin | Median structural margin | Converged |
-|---|---:|---:|---:|---:|---|
-| Non-agricultural banks | 53,805 | 5,626 | 0.02379 | 0.00823 | Yes |
-| Agricultural banks | 45,223 | 3,114 | 0.02023 | 0.00887 | Yes |
-| All banks pooled | 99,028 | 7,248 | 0.02213 | 0.00856 | Yes |
+| Market | Primary instruments | Observations | Banks | Median margin |
+|---|---|---:|---:|---:|
+| Deposits | Wang supply costs | 245,553 | 14,984 | 0.001613 |
+| Total loans | Wang supply costs | 244,893 | 14,936 | 0.010090 |
+| Agricultural production loans | Wang supply costs | 99,028 | 7,248 | 0.015604 |
 
-See `output/tables/blp_market_power/ag_production_summary.csv` for the full compact table. These are provisional structural estimates: the current Hansen test has `p = 0.0113`, and the weighting and parameter-covariance matrices are poorly conditioned. The repository therefore preserves the estimates while flagging instrument/specification refinement as required before causal interpretation.
+The primary specification follows Wang et al. and instruments loan rates with salary expense/assets and premises expense/assets. The all-rival-characteristics specification is retained as robustness. See `output/tables/blp_final/final_blp_summary.csv` for all six specifications. Rates and margins are decimals; for example, `0.015604` is about 1.5604 percentage points.
 
 ## Dynamic model status
 
-The repository includes the full Wang-style balance-sheet Bellman implementation and tracked diagnostics. The policy results remain labeled `illustrative_not_estimated`; the parameter table distinguishes initial SMD parameters, statutory/direct inputs, stress calibrations, and descriptive reduced-form quantities.
+The repository includes the Wang-style balance-sheet Bellman implementation, transition tables, parameters, diagnostics, and policy output. The cleaned audit in `output/tables/dynamic_counterfactuals/counterfactual_readiness.csv` is binding: the earlier competitive output is invalid because it scaled demand slopes incorrectly, and the risk/franchise counterfactual is not identified until an agricultural-franchise adjustment cost is estimated. Existing policy results remain illustrative rather than publication-ready estimates.
 
 See `docs/model.md` for the Bellman equation and `docs/data_requirements.md` for the complete input map.
 

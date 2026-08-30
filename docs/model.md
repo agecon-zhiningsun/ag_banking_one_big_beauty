@@ -9,7 +9,7 @@ u_{ijt}=x_{jt}'\beta+\alpha_i r_{jt}+\xi_{jt}+\varepsilon_{ijt},
 \qquad \alpha_i=\bar\alpha+\sigma_\alpha\nu_i.
 \]
 
-The maintained agricultural-production/deposit specification uses random coefficients and same-type Gandhi–Houde differentiation instruments. Bank type is agricultural versus non-agricultural. The current implementation requires four quarters per bank-year, clusters inference by bank (`CERT`), uses 20 simulation draws per market, and removes six collinear differentiation instruments. It performs the BLP contraction, IV/GMM estimation, share-derivative construction, and recovery of structural margins from the supply first-order conditions.
+The cleaned final estimator covers deposits, total loans, and agricultural-production loans. The primary specification follows Wang et al.: salary expense/assets and premises expense/assets instrument rates, while log branches and log employees per branch enter demand with bank and year fixed effects. An all-rival-characteristics differentiation-instrument specification is retained as robustness. Random rate heterogeneity is used for deposits; loan demand uses homogeneous rate sensitivity, matching Wang et al.
 
 For ownership matrix `Ω` and share Jacobian `J`, implied margins solve
 
@@ -17,7 +17,7 @@ For ownership matrix `Ω` and share Jacobian `J`, implied margins solve
 m_t=-(\Omega_t\odot J_t')^{-1}s_t.
 \]
 
-The compact empirical results are in `output/tables/blp_market_power/`. Detailed bank-year estimates remain in the external processed-data store. Convergence alone is not sufficient validation: the current Hansen statistic is 8.965 on 2 degrees of freedom (`p = 0.0113`), while matrix condition numbers are large. These diagnostics motivate instrument reduction, scaling, alternative moments, and sensitivity analysis.
+The compact final results are in `output/tables/blp_final/final_blp_summary.csv`. Detailed bank-year estimates remain in the external processed-data store. The primary median margins are 0.161 percentage points for deposits, 1.009 percentage points for total loans, and 1.560 percentage points for agricultural-production loans.
 
 ## Bellman equation
 
@@ -50,4 +50,4 @@ Expected competitor loan and deposit rates are iterated to a fixed point. The im
 
 ## Interpretation
 
-The BLP table is an empirical model output with material identification warnings. The current R dynamic program solves a discretized Wang-style Bellman problem but does not yet perform Wang et al.'s full simulated-minimum-distance estimation. Its downturn policy table is illustrative, not a final estimated counterfactual. That distinction is retained in every tracked output.
+The BLP table is an empirical model output. The current R dynamic program solves a discretized Wang-style Bellman problem but does not yet perform Wang et al.'s full simulated-minimum-distance estimation. The cleaned counterfactual audit also establishes that the earlier competitive comparison scaled demand slopes incorrectly and is invalid, while the proposed franchise/risk decomposition is not identified because the model lacks an estimated franchise adjustment cost. Existing downturn outputs are illustrative and must not be presented as final counterfactual estimates.

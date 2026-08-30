@@ -37,11 +37,12 @@ Their Table 5 attributes 35.91% of loan sensitivity to the federal-funds rate to
 
 ### BLP
 
-- The latest code clusters by bank, not by 32 annual markets.
-- It uses 20 simulation draws per market and same-type Gandhi–Houde quadratic differentiation instruments.
-- It now records years, excluded instruments, margin quantiles, Hansen diagnostics, boundary status and matrix condition numbers.
-- Current agricultural-production estimates converge, but the Hansen test rejects at conventional levels (`p = 0.0113`) and numerical conditioning is weak. The implied margins must remain provisional.
-- Required next checks: rescale characteristics/instruments; reduce or regularize the instrument set; report first-stage relevance; compare national and local deposit markets; test parent-level clustering; vary simulation draws; and report weak-identification-robust intervals.
+- The cleaned primary specification now follows Wang et al. directly, using salary and premises cost shifters as excluded instruments.
+- Deposits retain random rate heterogeneity; the two loan markets use homogeneous rate sensitivity, as in Wang et al.
+- The all-rival-characteristics differentiation-instrument specification is retained as robustness rather than treated as the maintained model.
+- The final primary median margins are 0.161 percentage points for deposits, 1.009 percentage points for total loans, and 1.560 percentage points for agricultural-production loans.
+- Total agricultural loans are not assigned a BLP markup because Call Reports lack a matching total-agricultural-loan interest-income rate.
+- Required next checks include first-stage reporting, parent-level clustering, national-versus-local deposit demand, alternative outside-option construction, and weak-identification-robust inference.
 
 ### Bellman model
 
@@ -49,6 +50,8 @@ Their Table 5 attributes 35.91% of loan sensitivity to the federal-funds rate to
 - Expected competitor rates are iterated to a fixed point, following the paper's low-dimensional Krusell–Smith approximation.
 - The current code solves a discretized dynamic problem and reports a Bellman residual, feasibility and equilibrium gap.
 - It does **not** yet reproduce the paper's full SMD estimator. Several parameters remain initial values, statutory inputs, descriptive estimates or policy-stress calibrations.
+- The cleaned audit rejects the old perfect-competition output because demand slopes were multiplied by 100. A correct comparison must constrain the loan rate to risk-adjusted marginal cost and re-solve.
+- The proposed risk-only/franchise decomposition is not identified until an agricultural-franchise adjustment cost is added and estimated.
 - Before publication-quality counterfactuals, implement the SMD objective, data/model moments, weighting matrix, standard errors, and parameter-recovery tests.
 
 ## Recommended empirical sequence
@@ -58,4 +61,3 @@ Their Table 5 attributes 35.91% of loan sensitivity to the federal-funds rate to
 3. Implement SMD moments patterned on Wang et al. Table 4, augmented with agricultural-bank/FCS moments.
 4. Validate baseline fit before any policy experiment.
 5. Run friction-removal experiments and policy counterfactuals with uncertainty bands.
-
