@@ -7,10 +7,6 @@ B4_marketing_loan_outside_credit_only,agricultural_banks,statutory MAL rate chan
 B5_obbba_no_default_effect,agricultural_banks,default-risk sensitivity,-4.27706289320806,-19.4756672244116,0,0,0.00550474538179457,-0.000410052710227961,0.00404998335664354
 B6_obbba_chargeoffs_down_25pct,agricultural_banks,combined estimated and calibrated channels,0.322673688505404,-40.1366768995361,0,0,0.000161444118309484,8.72393385672465e-05,0.00404998335664354
 B_obbba_current_market_power,agricultural_banks,combined estimated and calibrated channels,-6.56464981567625,-14.6125726059876,0,0,0.00816212931585519,-0.000557062344342829,0.00404998335664354
-C_obbba_competitive_deposits,agricultural_banks,structural friction-removal calibration,-6.56464981567625,-14.6125726059876,137.745667797643,0,0.779255205120757,-0.00340028886685127,0.00404998335664354
-D_obbba_competitive_lending,agricultural_banks,structural friction-removal calibration,179.793412521952,-168.134662991914,0,0.0950431268891978,-0.113278286332581,0.0111019782943604,0.00376190845352366
-E_obbba_both_markets_competitive,agricultural_banks,structural friction-removal calibration,179.793412521952,-168.134662991914,137.745667797643,0.0749984257597475,0.63777008834287,0.00828324361910012,0.00376190845352366
-F_obbba_no_capital_constraint,agricultural_banks,structural friction-removal calibration,327.198590389828,-294.407140954032,0,0.149212826485755,-0.230342364834739,-0.00415459453585263,0.012
 A_no_policy,nonagricultural_banks,baseline,0,0,0,0,0,0,0.00394210834481554
 B1_deposit_funding_only,nonagricultural_banks,estimated total-FSA deposit response; structural allocation,0,0,-8.67361737988404e-15,0,6.50692503665895e-05,8.43911812445364e-08,0.00394210834481554
 B2_borrower_liquidity_only,nonagricultural_banks,descriptive total-FSA lending reduced form,-0.189738818368213,-1.40047043406533e-06,0,0,5.83486641066444e-05,-4.12251403572594e-06,0.00394210834481554
@@ -19,7 +15,3 @@ B4_marketing_loan_outside_credit_only,nonagricultural_banks,statutory MAL rate c
 B5_obbba_no_default_effect,nonagricultural_banks,default-risk sensitivity,-9.28450696097508,-6.85290743596134e-05,-8.67361737988404e-15,0,0.00292024977020144,-0.00020164296794245,0.00394210834481554
 B6_obbba_chargeoffs_down_25pct,nonagricultural_banks,combined estimated and calibrated channels,3.61741622420551,-20.1014455935007,-8.67361737988404e-15,0,-0.00104736206977774,6.92362545698794e-05,0.00598480017170328
 B_obbba_current_market_power,nonagricultural_banks,combined estimated and calibrated channels,-9.28450696097508,-6.85290743596134e-05,-8.67361737988404e-15,0,0.00292024977020144,-0.000188396225389763,0.00394210834481554
-C_obbba_competitive_deposits,nonagricultural_banks,structural friction-removal calibration,-9.28450696097508,-6.85290743596134e-05,150.30036244432,0,0.7370853148545,-0.00279757129944154,0.0019808298251948
-D_obbba_competitive_lending,nonagricultural_banks,structural friction-removal calibration,115.720290939461,-90.6145388775034,-8.67361737988404e-15,0,-0.0355213460357365,0.001828030087721,0.00406490159129995
-E_obbba_both_markets_competitive,nonagricultural_banks,structural friction-removal calibration,115.720290939461,-90.6145388775034,150.30036244432,0,0.698643719048562,-0.000781144986330772,0.00406490159129995
-F_obbba_no_capital_constraint,nonagricultural_banks,structural friction-removal calibration,128.236454354697,-155.671877761157,-8.67361737988404e-15,0,-0.0393703286598496,-0.00386966009474803,0.00797958145338287

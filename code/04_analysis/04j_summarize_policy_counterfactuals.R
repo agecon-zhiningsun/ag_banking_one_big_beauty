@@ -18,7 +18,6 @@ x[, `:=`(
     scenario == "B3_default_risk_only", "calibrated 10-percent charge-off reduction",
     scenario == "B4_marketing_loan_outside_credit_only", "statutory MAL rate change; outside-option elasticity calibrated",
     grepl("default", scenario), "default-risk sensitivity",
-    grepl("competitive|capital", scenario), "structural friction-removal calibration",
     default = "combined estimated and calibrated channels"
   )
 )]
@@ -44,22 +43,20 @@ compact[diag, equilibrium_gap := i.equilibrium_gap,
 implications <- data.table(
   channel = c(
     "farmer liquidity", "default risk", "bank funding allocation",
-    "loan market power", "capital constraint", "government credit substitution"
+    "loan market power", "government credit substitution"
   ),
   implemented_result = c(
     "Historical total-FSA exposure predicts lower short-run agricultural borrowing demand.",
     "Historical charge-off response is not identified; Bellman reports 0, 10 and 25 percent charge-off reductions.",
     "Historical total-FSA exposure predicts less wholesale funding; Bellman allocates deposits among funding, securities and loans.",
-    "Agricultural BLP markups enter current-power pricing; competitive lending imposes risk-adjusted marginal cost.",
-    "No-capital-constraint case re-solves all choices with the requirement set to zero.",
+    "Agricultural BLP markups enter pricing in every reported policy counterfactual.",
     "OBBBA Marketing Assistance Loan rate increases shift the farmer outside option; the elasticity remains calibrated."
   ),
   farmer_interpretation = c(
     "Cash support can reduce operating-loan need even when bank liquidity rises.",
     "Safer repayment can lower marginal loan cost, but magnitude is a sensitivity rather than an estimate.",
     "Additional deposits need not become farm loans; banks can replace wholesale funding or buy securities.",
-    "Existing market power can retain cost savings; competitive lending produces much larger quantity pass-through.",
-    "Capital limits how aggressively a bank can convert funding and lower risk into lending.",
+    "Existing market power can retain part of funding-cost and default-risk savings rather than fully passing them through.",
     "Higher government commodity-loan floors can crowd out commercial bank borrowing while improving farmer financing options."
   )
 )

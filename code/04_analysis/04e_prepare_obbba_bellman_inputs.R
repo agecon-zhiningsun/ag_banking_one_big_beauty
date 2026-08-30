@@ -47,24 +47,14 @@ fwrite(summary, file.path(out_dir, "04e_bellman_shock_summary.csv"))
 
 counterfactuals <- data.table(
   counterfactual = c(
-    "A_no_policy", "B_obbba_current_market_power",
-    "C_obbba_competitive_deposits", "D_obbba_competitive_lending",
-    "E_obbba_both_markets_competitive", "F_obbba_no_capital_constraint"
+    "A_no_policy", "B_obbba_current_market_power"
   ),
   required_change = c(
     "Set deposit and borrower policy shocks to zero.",
-    "Apply the estimated total-FSA deposit-market-size shock; this is the identified deposit-only policy experiment.",
-    "Apply OBBBA and impose the correctly derived competitive deposit-pricing condition.",
-    "Apply OBBBA and constrain the loan rate to risk-adjusted marginal cost.",
-    "Impose both competitive pricing conditions and re-solve.",
-    "Apply OBBBA while relaxing the capital constraint and re-solve."
+    "Apply OBBBA under the estimated deposit and agricultural-loan market power."
   ),
   current_status = c(
     "reduced_form_deposit_counterfactual_complete",
-    "coarse_grid_structural_calibration_complete",
-    "coarse_grid_structural_calibration_complete",
-    "coarse_grid_structural_calibration_complete",
-    "coarse_grid_structural_calibration_complete",
     "coarse_grid_structural_calibration_complete"
   )
 )

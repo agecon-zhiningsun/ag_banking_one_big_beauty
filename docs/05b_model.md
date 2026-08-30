@@ -52,10 +52,8 @@ Expected competitor loan and deposit rates are iterated to a fixed point. The im
 
 The BLP table is an empirical model output. The current R dynamic program solves
 a discretized Wang-style Bellman problem but does not yet perform Wang et al.'s
-full simulated-minimum-distance estimation. The earlier invalid competitive
-comparison that scaled demand slopes has been removed. Competitive lending now
-imposes risk-adjusted marginal-cost pricing; competitive deposits impose a
-zero-static-profit funding condition based on avoided wholesale cost net of
-deposit servicing and reserve carry. The OBBBA runs use a coarse two-point bank
+full simulated-minimum-distance estimation. All reported OBBBA scenarios retain
+the estimated deposit and agricultural-loan market power. Competitive-pricing
+calibrations are excluded. The OBBBA runs use a coarse two-point bank
 state grid and report fixed-point and Bellman diagnostics. They remain
 structural calibrations, not publication-ready estimates.

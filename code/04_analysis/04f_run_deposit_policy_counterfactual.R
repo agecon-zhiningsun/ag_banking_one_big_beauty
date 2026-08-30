@@ -11,7 +11,7 @@ dir.create(out_dir, recursive = TRUE, showWarnings = FALSE)
 
 # This is the identified deposit-only A-versus-B counterfactual. It deliberately
 # does not manufacture loan-demand/default shocks or use the invalid historical
-# "competitive = slope * 100" shortcut in the legacy Bellman code.
+# This experiment retains the estimated market-power environment.
 shock <- as.data.table(read_parquet(file.path(
   final_dir, "04e_obbba_bellman_bank_shocks_2025.parquet"
 )))[actual_revenue_share == 0.85 & retention_case == "estimated_total_fsa"]

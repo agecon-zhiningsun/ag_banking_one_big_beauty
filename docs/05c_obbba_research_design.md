@@ -141,14 +141,11 @@ mix and must be labeled a scenario rather than an official county allocation.
 `code/04_analysis/04e_prepare_obbba_bellman_inputs.R` converts county
 deposit changes into bank-specific percentage shocks using 2025 branch-deposit
 geography and creates Bellman-ready deposit-market-size multipliers. The
-counterfactual registry covers no policy, current market power, competitive
-deposits, competitive lending, both markets competitive, and no capital
-constraint. The borrower-liquidity reduced form, funding/capital equations,
+counterfactual registry covers no policy and OBBBA under current market power.
+The borrower-liquidity reduced form, funding/capital equations,
 Marketing Assistance Loan outside-credit exposure and explicit default-risk
-sensitivities now enter the Bellman exercise. The old demand-slope-times-100
-shortcut has been removed. Competitive lending is constrained to risk-adjusted
-marginal cost, while competitive deposit pricing uses avoided marginal
-wholesale funding cost net of servicing and reserve carry.
+sensitivities now enter the Bellman exercise. Competitive-pricing calibrations
+are excluded from the reported analysis.
 
 The resulting two-point-state-grid solutions are structural calibrations, not
 full SMD estimates. The Bellman residual and accounting constraints are tight,
@@ -187,11 +184,12 @@ Run the following counterfactuals:
 - risk/default channel only;
 - government-credit outside-option channel only;
 - tax-investment channel only;
-- full policy under estimated market power;
-- full policy under competitive loan/deposit pricing; and
-- full policy with relaxed/tighter bank capital constraints.
+- full policy under estimated deposit and agricultural-loan market power.
 
-This decomposition is the agricultural analogue of Wang et al.'s friction-removal exercise and directly answers whether bank market power amplifies, dampens or redistributes policy transmission.
+This decomposition uses Wang et al.'s dynamic-bank framework while holding the
+estimated market-power environment fixed. It asks how the policy channels are
+allocated across deposits, wholesale funding, securities, lending, and farmer
+borrowing costs under the market structure observed in the data.
 
 ## Novel contribution relative to Wang et al.
 

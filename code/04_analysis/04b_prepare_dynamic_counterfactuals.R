@@ -58,28 +58,24 @@ historical_path <- annual[year %between% c(2014L, 2019L), .(
 
 readiness <- data.table(
   counterfactual = c(
-    "A_risk_only_bank",
-    "B_perfect_competition",
-    "C_markup_by_franchise_decomposition",
-    "D_no_capital_constraint"
+    "A_no_policy",
+    "B_obbba_current_market_power",
+    "B1_to_B6_current_power_channel_decompositions"
   ),
   design = c(
-    "Set the estimated agricultural-franchise adjustment-cost parameter to zero while holding the farm shock, losses, funding, capital rule, and demand fixed.",
-    "Constrain the loan rate to risk-adjusted marginal cost and re-solve; do not multiply demand slopes and do not mechanically subtract a markup from the observed rate.",
-    "Solve baseline, competitive, risk-only monopoly, and competitive risk-only environments under the identical observed shock path.",
-    "Relax the regulatory/economic capital constraint while holding the shock and all estimated primitives fixed."
+    "Set all OBBBA policy shocks to zero under estimated market power.",
+    "Apply all modeled OBBBA channels under estimated deposit and agricultural-loan market power.",
+    "Activate funding, borrower-liquidity, default-risk, and government-credit channels separately while retaining current market power."
   ),
   current_status = c(
-    "requires_estimated_adjustment_cost",
-    "requires_correct_marginal_cost_constraint",
-    "requires_A_and_B",
-    "computationally_feasible_after_baseline_reestimation"
+    "complete",
+    "coarse_grid_structural_calibration_complete",
+    "coarse_grid_structural_calibration_complete"
   ),
   current_result = c(
-    "Not separately identified in the existing model because it contains no franchise mechanism.",
-    "The old competitive output is invalid because it multiplied demand slopes by 100.",
-    "Baseline and risk-only are currently the same model, so the decomposition is not yet informative.",
-    "The code can relax the constraint, but the comparison should be run only after the corrected baseline is estimated."
+    "Provides the comparison baseline.",
+    "Primary policy counterfactual.",
+    "Shows which policy channels drive the primary result without changing market structure."
   )
 )
 

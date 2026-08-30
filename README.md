@@ -104,12 +104,10 @@ The primary specification follows Wang et al. and instruments loan rates with sa
 ## Dynamic model status
 
 The repository includes the Wang-style balance-sheet Bellman implementation,
-transition tables, parameters, diagnostics, and policy output. The invalid old
-competition shortcut that multiplied demand slopes has been removed. Competitive
-lending now fixes the loan rate at risk-adjusted marginal cost; competitive
-deposits use the avoided marginal wholesale-funding cost net of servicing and
-reserve carry. OBBBA channel, competition and capital counterfactuals have been
-run on a two-point bank-state grid. They are structural calibrations, not the
+transition tables, parameters, diagnostics, and policy output. Reported OBBBA
+counterfactuals retain the estimated deposit and agricultural-loan market power;
+competitive-pricing calibrations are excluded. The combined policy and channel
+decompositions have been run on a two-point bank-state grid. They are structural calibrations, not the
 full Wang simulated-minimum-distance estimation, and the reported competitor-
 rate equilibrium gaps remain material.
 

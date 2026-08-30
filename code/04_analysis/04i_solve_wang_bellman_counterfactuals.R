@@ -164,8 +164,7 @@ solve_type <- function(bank_type, theta, regime = "current_power",
   J <- 6L
   competitors <- J - 1L
   beta <- 1 / (1 + theta$discount_rate)
-  competitive_loans <- regime %in% c("competitive_lending", "both_competitive")
-  competitive_deposits <- regime %in% c("competitive_deposits", "both_competitive")
+  if (regime != "current_power") stop("Only the current-market-power regime is supported.")
   alpha_l <- dm$alpha_l
   alpha_d_mean <- dm$alpha_d
   alpha_d_draws <- pmax(alpha_d_mean + seq(-1, 1, length.out = 10L) * 0.615, 1e-4)
@@ -200,22 +199,10 @@ solve_type <- function(bank_type, theta, regime = "current_power",
       E <- e_grid[st$e_state]
       comp_l <- rival_l[st$f_state, st$farm_state]
       comp_d <- rival_d[st$f_state, st$farm_state]
-      # Competitive lending constrains price to risk-adjusted marginal cost.
-      # Competitive deposits use the zero-static-profit funding condition: the
-      # avoided marginal wholesale funding cost net of servicing and reserve
-      # carry. This replaces the invalid old shortcut that multiplied demand
-      # slopes by 100.
-      loan_rates <- if (competitive_loans) {
-        clip(f + delta + theta$loan_service_cost, 0, 0.25)
-      } else {
-        clip(comp_l + c(-0.012, 0, 0.012), f + delta, 0.25)
-      }
-      deposit_rates <- if (competitive_deposits) {
-        clip(f + theta$wholesale_cost - theta$deposit_service_cost -
-               statutory$reserve_requirement * f, 0, 0.20)
-      } else {
-        clip(comp_d + c(-0.010, 0, 0.010), 0, 0.20)
-      }
+      # Loan and deposit pricing retain the market-power environment estimated
+      # in the BLP stage for every reported policy counterfactual.
+      loan_rates <- clip(comp_l + c(-0.012, 0, 0.012), f + delta, 0.25)
+      deposit_rates <- clip(comp_d + c(-0.010, 0, 0.010), 0, 0.20)
       payout_rates <- c(0, 0.35, 0.70)
       rows <- vector("list", length(loan_rates) * length(deposit_rates) * length(payout_rates))
       rr <- 0L
@@ -377,20 +364,17 @@ scenario_specs <- data.table(
     "A_no_policy", "B_obbba_current_market_power",
     "B1_deposit_funding_only", "B2_borrower_liquidity_only",
     "B3_default_risk_only", "B4_marketing_loan_outside_credit_only",
-    "B5_obbba_no_default_effect", "B6_obbba_chargeoffs_down_25pct",
-    "C_obbba_competitive_deposits", "D_obbba_competitive_lending",
-    "E_obbba_both_markets_competitive", "F_obbba_no_capital_constraint"
+    "B5_obbba_no_default_effect", "B6_obbba_chargeoffs_down_25pct"
   ),
   regime = c(
     "current_power", "current_power", "current_power", "current_power",
-    "current_power", "current_power", "current_power", "current_power",
-    "competitive_deposits", "competitive_lending", "both_competitive", "current_power"
+    "current_power", "current_power", "current_power", "current_power"
   ),
-  use_deposit_shock = c(FALSE, TRUE, TRUE, FALSE, FALSE, FALSE, TRUE, TRUE, TRUE, TRUE, TRUE, TRUE),
-  use_demand_shock = c(FALSE, TRUE, FALSE, TRUE, FALSE, FALSE, TRUE, TRUE, TRUE, TRUE, TRUE, TRUE),
-  default_multiplier = c(1, .90, 1, 1, .90, 1, 1, .75, .90, .90, .90, .90),
-  use_outside_credit = c(FALSE, TRUE, FALSE, FALSE, FALSE, TRUE, TRUE, TRUE, TRUE, TRUE, TRUE, TRUE),
-  capital_requirement = c(rep(statutory$capital_requirement, 11), 0)
+  use_deposit_shock = c(FALSE, TRUE, TRUE, FALSE, FALSE, FALSE, TRUE, TRUE),
+  use_demand_shock = c(FALSE, TRUE, FALSE, TRUE, FALSE, FALSE, TRUE, TRUE),
+  default_multiplier = c(1, .90, 1, 1, .90, 1, 1, .75),
+  use_outside_credit = c(FALSE, TRUE, FALSE, FALSE, FALSE, TRUE, TRUE, TRUE),
+  capital_requirement = rep(statutory$capital_requirement, 8)
 )
 
 solve_scenario <- function(spec, bank_type) {
