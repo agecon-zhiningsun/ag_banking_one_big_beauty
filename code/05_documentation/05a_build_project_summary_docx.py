@@ -190,7 +190,36 @@ for text in [
 ]:
     add_bullet(text)
 
-doc.add_heading("4. Datasets Downloaded and Constructed", level=1)
+doc.add_heading("4. Four Transmission Channels and Counterfactuals", level=1)
+channels = [
+    ("B1: Deposit-funding channel. ", "Farm-support payments may remain temporarily in local deposits. Banks then choose whether to replace wholesale funding, expand agricultural lending, purchase securities, or retain liquidity. This channel activates the estimated deposit response while holding borrower demand, default risk, and government credit unchanged."),
+    ("B2: Borrower-liquidity channel. ", "Because farmers receive the payments directly, greater liquidity may reduce demand for short-term operating loans, permit debt repayment, finance consumption or investment internally, and improve future borrowing capacity. This channel activates the historical agricultural-loan-demand response while holding the other channels unchanged."),
+    ("B3: Default-risk channel. ", "Government support may improve repayment capacity and reduce delinquencies, charge-offs, expected loan losses, and banks' marginal lending costs. The historical regression does not causally identify this effect, so the central calibration assumes a 10 percent reduction in charge-offs and reports 0 and 25 percent sensitivity cases."),
+    ("B4: Government-credit channel. ", "Higher Marketing Assistance Loan rates improve farmers' government-supported financing option. This may improve liquidity and bargaining power while substituting for commercial operating loans. The magnitude is calibrated because the project does not yet estimate substitution between bank loans and Marketing Assistance Loans."),
+]
+for prefix, body in channels:
+    add_bullet(prefix + body, bold_prefix=prefix)
+
+doc.add_heading("Counterfactual design", level=2)
+counterfactuals = [
+    ("A_no_policy. ", "Baseline with all OBBBA policy shocks set to zero under current market power."),
+    ("B_obbba_current_market_power. ", "Primary counterfactual with all four channels operating simultaneously under the estimated deposit and agricultural-loan market power."),
+    ("B1-B4 channel decompositions. ", "Activate each transmission channel separately to identify which mechanism drives the full-policy prediction."),
+    ("B5_obbba_no_default_effect. ", "Full policy with no reduction in default risk."),
+    ("B6_obbba_chargeoffs_down_25pct. ", "Full policy with a stronger 25 percent charge-off reduction."),
+]
+for prefix, body in counterfactuals:
+    add_bullet(prefix + body, bold_prefix=prefix)
+
+comparison = doc.add_paragraph()
+comparison.add_run("Primary comparison. ").bold = True
+comparison.add_run(
+    "B_obbba_current_market_power minus A_no_policy. B1-B4 explain the mechanisms; "
+    "B5-B6 test uncertainty about default risk and are not separate government programs."
+)
+shade_paragraph(comparison, fill="F4F6F9")
+
+doc.add_heading("5. Datasets Downloaded and Constructed", level=1)
 datasets = [
     ("FSA annual payment files, 2014-2025. ", "104 official recipient/payment workbooks (approximately 3.5 GB). Recipient records were aggregated to county, year, and program; names and addresses remain outside Git. Programs were classified as ARC/PLC, MFP, CFAP, other FSA, and total FSA payments."),
     ("FSA ARC/PLC program data. ", "Official 2025 county-crop enrolled base acres, 2025 county PLC yields, projected 2026 effective prices and PLC payment rates, 2026 market-year-average price information, and 2026 ARC-CO county benchmark revenues."),
@@ -206,7 +235,7 @@ datasets = [
 for prefix, body in datasets:
     add_bullet(prefix + body, bold_prefix=prefix)
 
-doc.add_heading("5. Methods", level=1)
+doc.add_heading("6. Methods", level=1)
 methods = [
     ("Payment timing and geography. ", "FSA disbursements from July through December are assigned to the following June SOD observation; January through June payments are assigned to the same June. County payments are not assigned directly to individual banks. Bank exposure is a service-area measure based on prior-year SOD county deposit weights."),
     ("Payment-retention regression. ", "County deposit growth is regressed on total FSA payments divided by lagged county deposits, with county and year fixed effects and standard errors clustered by county. Separate ARC/PLC, MFP, and CFAP regressions are retained as diagnostics."),
@@ -224,7 +253,7 @@ methods = [
 for prefix, body in methods:
     add_bullet(prefix + body, bold_prefix=prefix)
 
-doc.add_heading("6. Current Predictions", level=1)
+doc.add_heading("7. Current Predictions", level=1)
 results = [
     ("BLP market power. ", "The median deposit markdown is approximately 16.1 basis points; the median total-loan markup is 100.9 basis points; and the median agricultural-production-loan markup is 156.0 basis points."),
     ("Total-FSA deposit response. ", "The total-FSA coefficient is 0.07616 (standard error 0.02337; p = 0.0011). Interpreted mechanically, one additional dollar of FSA disbursement is associated with about 7.6 cents of additional county deposit stock. The separate ARC/PLC, MFP, and CFAP coefficients are not statistically significant and are not used in the main simulation."),
@@ -241,7 +270,7 @@ results = [
 for prefix, body in results:
     add_bullet(prefix + body, bold_prefix=prefix)
 
-doc.add_heading("7. Selected References", level=1)
+doc.add_heading("8. Selected References", level=1)
 references = [
     "Giri, A. K., Subedi, D., and Kassel, K. (2022). Analysis of the payments from the Coronavirus Food Assistance Program and the Market Facilitation Program to minority producers. Applied Economic Perspectives and Policy. https://doi.org/10.1002/aepp.13325",
     "Goodwin, B. K., Mishra, A. K., and Ortalo-Magne, F. N. (2003). What's wrong with our models of agricultural land values? American Journal of Agricultural Economics, 85(3), 744-752. https://doi.org/10.1111/1467-8276.00479",
