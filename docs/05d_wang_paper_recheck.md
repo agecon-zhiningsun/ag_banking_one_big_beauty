@@ -49,10 +49,11 @@ Their Table 5 attributes 35.91% of loan sensitivity to the federal-funds rate to
 - The state/action logic follows Wang et al.: banks set loan and deposit rates, manage securities and wholesale funding, satisfy reserve/capital constraints, absorb defaults, and evolve equity.
 - Expected competitor rates are iterated to a fixed point, following the paper's low-dimensional Krusell–Smith approximation.
 - The current code solves a discretized dynamic problem and reports a Bellman residual, feasibility and equilibrium gap.
-- It does **not** yet reproduce the paper's full SMD estimator. Several parameters remain initial values, statutory inputs, descriptive estimates or policy-stress calibrations.
+- A two-stage agricultural-bank SMD estimator is now implemented in `04k_estimate_wang_smd_bellman.R`. It uses 11 moments, seven parameters, clustered-bank bootstrap weighting, numerical Jacobians, and sandwich inference; every objective evaluation resolves the Bellman and pricing equilibrium.
+- The completed estimate is numerically converged but empirically rejected by the overidentifying moment fit. It must not be used as a policy result. The largest misses are ROA, leverage, loan/deposit, payout, and noninterest cost.
 - The cleaned audit rejects the old perfect-competition output because demand slopes were multiplied by 100. A correct comparison must constrain the loan rate to risk-adjusted marginal cost and re-solve.
 - The proposed risk-only/franchise decomposition is not identified until an agricultural-franchise adjustment cost is added and estimated.
-- Before publication-quality counterfactuals, implement the SMD objective, data/model moments, weighting matrix, standard errors, and parameter-recovery tests.
+- Before publication-quality counterfactuals, respecify the accounting/profit block, add parameter-recovery tests, and pass a preregistered moment-fit gate; the present counterfactual files are explicitly tagged as rejected diagnostics.
 
 ## Recommended empirical sequence
 

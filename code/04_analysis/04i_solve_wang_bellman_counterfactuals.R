@@ -26,7 +26,8 @@ if (!file.exists(input_path)) stop("Run code/03_construct/03a_construct_dynamic_
 x <- as.data.table(read_parquet(input_path))
 x <- x[
   agricultural_bank %in% 0:1 & is.finite(funding_rate) &
-    is.finite(net_chargeoff_rate) & is.finite(ag_production_loan_ratio) &
+    is.finite(net_chargeoff_rate) & is.finite(total_loan_ratio) &
+    is.finite(ag_production_loan_ratio) &
     is.finite(capital_ratio) & is.finite(deposit_asset_ratio)
 ]
 
@@ -57,7 +58,7 @@ transition_matrix <- function(dt, state_name, nstate) {
 # Discretized aggregate and bank states: f, delta, farm income, L, E.
 f_grid <- qgrid(x$funding_rate, c(1 / 3, 2 / 3))
 d_grid <- qgrid(x$net_chargeoff_rate, c(1 / 3, 2 / 3))
-l_grid <- qgrid(x$ag_production_loan_ratio, c(1 / 3, 2 / 3))
+l_grid <- qgrid(x$total_loan_ratio, c(1 / 3, 2 / 3))
 e_grid <- qgrid(x$capital_ratio, c(1 / 3, 2 / 3))
 if (any(lengths(list(f_grid, d_grid, l_grid, e_grid)) < c(2, 2, 2, 2))) {
   stop("Insufficient support for the Wang state grids.")
@@ -65,7 +66,7 @@ if (any(lengths(list(f_grid, d_grid, l_grid, e_grid)) < c(2, 2, 2, 2))) {
 x[, `:=`(
   f_state = vapply(funding_rate, nearest, integer(1), grid = f_grid),
   d_state = vapply(net_chargeoff_rate, nearest, integer(1), grid = d_grid),
-  l_state = vapply(ag_production_loan_ratio, nearest, integer(1), grid = l_grid),
+  l_state = vapply(total_loan_ratio, nearest, integer(1), grid = l_grid),
   e_state = vapply(capital_ratio, nearest, integer(1), grid = e_grid)
 )]
 P_f <- transition_matrix(x, "f_state", length(f_grid))
@@ -120,6 +121,25 @@ theta <- list(
     safe_median(x$ag_production_loan_ratio, 0.08),
   no_borrow_quality = 0
 )
+estimated_parameter_path <- file.path(
+  "output", "tables", "04k_smd_estimation", "04k_wang_smd_parameter_estimates.csv"
+)
+smd_moment_path <- file.path(
+  "output", "tables", "04k_smd_estimation", "04k_wang_smd_moment_fit.csv"
+)
+smd_valid <- FALSE
+if (file.exists(estimated_parameter_path)) {
+  estimated_theta <- fread(estimated_parameter_path)
+  estimated_theta <- estimated_theta[parameter %in% names(theta) & is.finite(estimate)]
+  for (parameter_name in estimated_theta$parameter) {
+    theta[[parameter_name]] <- estimated_theta[parameter == parameter_name, estimate][1L]
+  }
+  if (file.exists(smd_moment_path)) {
+    smd_fit <- fread(smd_moment_path)
+    smd_valid <- all(is.finite(smd_fit$standardized_difference)) &&
+      max(abs(smd_fit$standardized_difference)) <= 3
+  }
+}
 statutory <- list(tax_rate = 0.35, capital_requirement = 0.06,
                   reserve_requirement = 0.03, maturity_rate = 1 / 3.5)
 
@@ -169,7 +189,9 @@ solve_type <- function(bank_type, theta, regime = "current_power",
   alpha_d_mean <- dm$alpha_d
   alpha_d_draws <- pmax(alpha_d_mean + seq(-1, 1, length.out = 10L) * 0.615, 1e-4)
   loan_market_size <- dm$loan_ratio / pmax(dm$loan_share, 1e-8)
-  deposit_market_size <- dm$deposit_ratio / pmax(dm$deposit_share, 1e-8) *
+  # Wang's W/K parameter is the relative size of the deposit and loan markets.
+  # It must enter the model-generated deposit quantity for SMD identification.
+  deposit_market_size <- loan_market_size * theta$wealth_to_loan_market *
     policy_shock$deposit_market_size_multiplier
   loan_quality <- log(dm$loan_share / pmax(1 - J * dm$loan_share, 1e-8)) + alpha_l * dm$loan_rate
   deposit_quality <- log(dm$deposit_share / pmax(1 - J * dm$deposit_share, 1e-8)) -
@@ -203,7 +225,7 @@ solve_type <- function(bank_type, theta, regime = "current_power",
       # in the BLP stage for every reported policy counterfactual.
       loan_rates <- clip(comp_l + c(-0.012, 0, 0.012), f + delta, 0.25)
       deposit_rates <- clip(comp_d + c(-0.010, 0, 0.010), 0, 0.20)
-      payout_rates <- c(0, 0.35, 0.70)
+      payout_rates <- c(0, 0.025, 0.05, 0.10, 0.20)
       rows <- vector("list", length(loan_rates) * length(deposit_rates) * length(payout_rates))
       rr <- 0L
       for (rl in loan_rates) for (rd in deposit_rates) for (payout in payout_rates) {
@@ -288,7 +310,9 @@ solve_type <- function(bank_type, theta, regime = "current_power",
         best$next_e_state <- NULL
         new_policy[[s]] <- best
       }
-      gap <- max(abs(V_new - V))
+      # Wang et al.'s public solver uses a scale-free Bellman error. An
+      # absolute error falsely signals nonconvergence when bank value is large.
+      gap <- max(abs(V_new - V) / (abs(V_new) + abs(V) + 0.01))
       V <- V_new
       policy <- new_policy
       if (gap < value_tolerance) break
@@ -329,6 +353,10 @@ solve_type <- function(bank_type, theta, regime = "current_power",
   pol[, bellman_residual := gap]
   pol[]
 }
+
+if (identical(Sys.getenv("AG_BANKING_DEFINE_ONLY"), "1")) {
+  message("Loaded Bellman model definitions without running counterfactuals.")
+} else {
 
 channel_path <- file.path(external_dir, "..", "04h_obbba_bank_balance_sheet_channel_shocks.parquet")
 lending_path <- file.path(external_dir, "..", "04g_obbba_bank_lending_channel_simulation_2025.parquet")
@@ -404,7 +432,13 @@ solution <- rbindlist(lapply(seq_len(nrow(scenario_specs)), function(i) {
 }))
 
 summarize_policy <- function(dt) dt[, .(
-  result_status = "structural_calibration_not_full_SMD_estimate",
+  result_status = if (file.exists(estimated_parameter_path) && smd_valid) {
+    "estimated_SMD_Bellman_counterfactual_passes_fit_gate"
+  } else if (file.exists(estimated_parameter_path)) {
+    "estimated_SMD_rejected_poor_moment_fit_not_policy_result"
+  } else {
+    "structural_calibration_not_full_SMD_estimate"
+  },
   loan_rate = mean(loan_rate), deposit_rate = mean(deposit_rate),
   new_ag_loans = mean(new_loans), deposits = mean(deposits),
   wholesale_funding = mean(wholesale_funding), securities = mean(securities),
@@ -466,3 +500,4 @@ fwrite(as.data.table(P_d), file.path(table_dir, "04i_wang_transition_chargeoffs.
 fwrite(as.data.table(P_z), file.path(table_dir, "04i_wang_transition_farm_income.csv"))
 
 message("Solved the corrected Wang-style OBBBA channel and market-power counterfactuals.")
+}

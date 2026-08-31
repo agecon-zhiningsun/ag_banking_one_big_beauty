@@ -68,12 +68,13 @@ market <- market[, ..keep_market]
 blp <- as.data.table(read_parquet(blp_path))
 setnames(
   blp,
-  old = intersect(c("shares", "prices", "structural_margin"), names(blp)),
+  old = intersect(c("shares", "prices", "structural_margin", "own_demand_derivative"), names(blp)),
   new = c(
     shares = "blp_ag_share",
     prices = "blp_ag_rate",
-    structural_margin = "blp_ag_markup"
-  )[intersect(c("shares", "prices", "structural_margin"), names(blp))]
+    structural_margin = "blp_ag_markup",
+    own_demand_derivative = "own_rate_derivative"
+  )[intersect(c("shares", "prices", "structural_margin", "own_demand_derivative"), names(blp))]
 )
 keep_blp <- intersect(c(
   "cert", "year", "blp_ag_share", "blp_ag_rate", "own_rate_derivative",
@@ -82,6 +83,10 @@ keep_blp <- intersect(c(
 blp <- unique(blp[, ..keep_blp], by = c("cert", "year"))
 
 deposit_blp <- as.data.table(read_parquet(deposit_blp_path))
+if ("own_demand_derivative" %in% names(deposit_blp) &&
+    !"own_rate_derivative" %in% names(deposit_blp)) {
+  setnames(deposit_blp, "own_demand_derivative", "own_rate_derivative")
+}
 setnames(
   deposit_blp,
   old = intersect(c("shares", "prices", "structural_margin", "own_rate_derivative"), names(deposit_blp)),
@@ -200,6 +205,7 @@ panel <- merge(panel, fred_year, by = "year", all.x = TRUE)
 
 panel[, `:=`(
   capital_ratio = fifelse(asset_q4 > 0, eq / asset_q4, NA_real_),
+  total_loan_ratio = fifelse(asset_q4 > 0, lnlsgr / asset_q4, NA_real_),
   ag_production_loan_ratio = fifelse(asset_q4 > 0, lnag_q4 / asset_q4, NA_real_),
   total_ag_loan_ratio = fifelse(asset_q4 > 0, total_ag_loans_q4 / asset_q4, NA_real_),
   deposit_asset_ratio = fifelse(asset_q4 > 0, dep_q4 / asset_q4, NA_real_),
@@ -213,9 +219,11 @@ panel[, `:=`(
 setorder(panel, cert, year)
 panel[, `:=`(
   ag_production_loan_ratio_lag = shift(ag_production_loan_ratio),
+  total_loan_ratio_lag = shift(total_loan_ratio),
   capital_ratio_lag = shift(capital_ratio),
   blp_ag_markup_lag = shift(blp_ag_markup),
   next_ag_production_loan_ratio = shift(ag_production_loan_ratio, type = "lead"),
+  next_total_loan_ratio = shift(total_loan_ratio, type = "lead"),
   next_capital_ratio = shift(capital_ratio, type = "lead")
 ), by = cert]
 panel[, ag_production_loan_growth :=

@@ -1,0 +1,12 @@
+statistic,value
+stage1_objective,100012.763940521
+stage2_objective,5902.61966769128
+strict_objective,5902.61966769128
+stage1_status,5
+stage2_status,5
+equilibrium_gap,0.00499999999999999
+bellman_residual,9.47849079724849e-09
+number_of_data_moments,11
+number_of_parameters,7
+bank_years,43493
+banks,2984

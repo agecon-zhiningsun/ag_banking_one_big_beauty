@@ -51,9 +51,28 @@ Expected competitor loan and deposit rates are iterated to a fixed point. The im
 ## Interpretation
 
 The BLP table is an empirical model output. The current R dynamic program solves
-a discretized Wang-style Bellman problem but does not yet perform Wang et al.'s
+a discretized Wang-style Bellman problem. `04k_estimate_wang_smd_bellman.R`
+now implements two-stage SMD: each objective evaluation resolves the Bellman
+problem and competitor-rate fixed point, the second stage uses a clustered-bank
+bootstrap moment covariance matrix, and numerical derivatives feed sandwich
+inference. The agricultural adaptation replaces market-to-book, which is not
+observed for most private agricultural banks, with observed balance-sheet and
+profitability moments. The loan state is total loans; the farm-policy shock
+applies only to the agricultural-loan component.
+
+The August 31, 2026 estimation converges numerically (relative Bellman residual
+below `1e-8`; competitor-rate gap `0.005`) but **fails the moment-fit gate**.
+It matches wholesale funding and the agricultural loan spread reasonably, but
+misses payout, deposit spread, leverage, loan/deposit, operating cost, and ROA.
+Therefore all `04i` counterfactual rows are tagged
+`estimated_SMD_rejected_poor_moment_fit_not_policy_result`; they are diagnostics,
+not policy findings. The model must be respecified before welfare or bank-risk
+counterfactuals are reported.
+
+The earlier implementation did not perform Wang et al.'s
 full simulated-minimum-distance estimation. All reported OBBBA scenarios retain
 the estimated deposit and agricultural-loan market power. Competitive-pricing
 calibrations are excluded. The OBBBA runs use a coarse two-point bank
 state grid and report fixed-point and Bellman diagnostics. They remain
-structural calibrations, not publication-ready estimates.
+structural calibrations, not publication-ready estimates, and they have been
+superseded by the rejected-estimation diagnostic described above.

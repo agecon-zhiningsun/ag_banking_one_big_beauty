@@ -111,6 +111,12 @@ decompositions have been run on a two-point bank-state grid. They are structural
 full Wang simulated-minimum-distance estimation, and the reported competitor-
 rate equilibrium gaps remain material.
 
+`04k_estimate_wang_smd_bellman.R` now runs a two-stage SMD estimator with a
+Bellman/equilibrium re-solve at every parameter vector. The current estimate
+converges numerically but fails the empirical moment-fit gate, so `04i`
+counterfactuals are retained only as rejected diagnostics and are not paper
+results.
+
 See `docs/05b_model.md` for the Bellman equation and `docs/05a_data_requirements.md` for the complete input map.
 
 ## Research extensions
