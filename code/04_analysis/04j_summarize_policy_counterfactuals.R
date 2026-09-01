@@ -8,8 +8,11 @@ dir.create(out_dir, recursive = TRUE, showWarnings = FALSE)
 
 x <- fread(file.path(in_dir, "04i_wang_obbba_structural_counterfactuals.csv"))
 x[, `:=`(
-  agricultural_loan_change_percent = 100 * pct_change_new_ag_loans_from_no_policy,
-  loan_rate_change_basis_points = 10000 * change_loan_rate_from_no_policy,
+  total_loan_change_percent = 100 * pct_change_new_total_loans_from_no_policy,
+  agricultural_loan_change_percent = 100 * pct_change_new_agricultural_loans_from_no_policy,
+  total_loan_rate_change_basis_points = 10000 * change_total_loan_rate_from_no_policy,
+  agricultural_loan_rate_change_basis_points =
+    10000 * change_agricultural_loan_rate_from_no_policy,
   deposit_rate_change_basis_points = 10000 * change_deposit_rate_from_no_policy,
   identification = fcase(
     scenario == "A_no_policy", "baseline",
@@ -24,8 +27,10 @@ x[, `:=`(
 
 compact <- x[, .(
   scenario, bank_type, identification,
+  total_loan_change_percent,
   agricultural_loan_change_percent,
-  loan_rate_change_basis_points,
+  total_loan_rate_change_basis_points,
+  agricultural_loan_rate_change_basis_points,
   deposit_rate_change_basis_points,
   change_wholesale_funding_from_no_policy,
   change_securities_from_no_policy,

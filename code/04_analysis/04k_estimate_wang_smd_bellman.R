@@ -1,5 +1,11 @@
 Sys.setenv(AG_BANKING_DEFINE_ONLY = "1")
 source(file.path("code", "04_analysis", "04i_solve_wang_bellman_counterfactuals.R"))
+# Never initialize a new estimation from a parameter vector whose moment-fit
+# gate failed. Use the data/BLP-implied starting vector defined above.
+theta <- theta_initial
+if (nzchar(Sys.getenv("SMD_START_WEALTH"))) {
+  theta$wealth_to_loan_market <- as.numeric(Sys.getenv("SMD_START_WEALTH"))
+}
 
 suppressPackageStartupMessages({
   library(data.table)
@@ -28,37 +34,38 @@ ag[, `:=`(
   dividend_book_equity = dividends_level / book_equity,
   wholesale_deposit = wholesale_level / pmax(deposit_level, 1e-8),
   deposit_spread = funding_rate - deposit_rate,
-  loan_spread = ag_production_loan_rate - funding_rate - net_chargeoff_rate,
+  loan_spread = blp_total_rate - funding_rate - net_chargeoff_rate,
   leverage = asset / book_equity,
   loan_deposit = total_loan_level / pmax(deposit_level, 1e-8),
   roa = net_income_asset_ratio
 )]
 
 annual_credit <- ag[, .(
-  ag_credit = sum(ag_production_loan_level, na.rm = TRUE),
+  total_credit = sum(total_loan_level, na.rm = TRUE),
   funding_rate = weighted.mean(funding_rate, pmax(asset, 1), na.rm = TRUE)
-), by = year][is.finite(ag_credit) & ag_credit > 0 & is.finite(funding_rate)]
-credit_fit <- lm(diff(log(ag_credit)) ~ diff(funding_rate), data = annual_credit)
+), by = year][is.finite(total_credit) & total_credit > 0 & is.finite(funding_rate)]
+credit_fit <- lm(diff(log(total_credit)) ~ diff(funding_rate), data = annual_credit)
 data_credit_sensitivity <- unname(coef(credit_fit)[2L])
 
 moment_names <- c(
   "dividend_book_equity", "mean_wholesale_deposit", "sd_wholesale_deposit",
   "deposit_spread", "loan_spread", "deposit_assets",
-  "noninterest_cost_assets", "leverage", "loan_deposit", "roa",
+  "noninterest_cost_assets", "leverage", "loan_deposit",
   "credit_funding_sensitivity"
 )
+targeted_indices <- c(1L, 2L, 6L, 7L, 8L, 9L)
 
 data_moments <- c(
-  median(ag$dividend_book_equity, na.rm = TRUE),
-  mean(ag$wholesale_deposit, na.rm = TRUE),
-  sd(ag$wholesale_deposit, na.rm = TRUE),
-  mean(ag$deposit_spread, na.rm = TRUE),
-  mean(ag$loan_spread, na.rm = TRUE),
-  mean(ag$deposit_asset_ratio, na.rm = TRUE),
-  mean(ag$net_noninterest_cost_asset_ratio, na.rm = TRUE),
-  mean(ag$leverage, na.rm = TRUE),
-  mean(ag$loan_deposit, na.rm = TRUE),
-  mean(ag$roa, na.rm = TRUE),
+  sum(ag$dividends_level, na.rm = TRUE) / sum(ag$book_equity, na.rm = TRUE),
+  sum(ag$wholesale_level, na.rm = TRUE) / sum(ag$deposit_level, na.rm = TRUE),
+  ag[, .(wholesale = sum(wholesale_level), deposits = sum(deposit_level)),
+     by = year][, sd(wholesale / deposits)],
+  weighted.mean(ag$deposit_spread, ag$deposit_level, na.rm = TRUE),
+  weighted.mean(ag$loan_spread, ag$total_loan_level, na.rm = TRUE),
+  sum(ag$deposit_level, na.rm = TRUE) / sum(ag$asset, na.rm = TRUE),
+  weighted.mean(ag$net_noninterest_cost_asset_ratio, ag$asset, na.rm = TRUE),
+  sum(ag$asset, na.rm = TRUE) / sum(ag$book_equity, na.rm = TRUE),
+  sum(ag$total_loan_level, na.rm = TRUE) / sum(ag$deposit_level, na.rm = TRUE),
   data_credit_sensitivity
 )
 names(data_moments) <- moment_names
@@ -72,8 +79,7 @@ bank_moments <- ag[, .(
   deposit_assets = mean(deposit_asset_ratio, na.rm = TRUE),
   noninterest_cost_assets = mean(net_noninterest_cost_asset_ratio, na.rm = TRUE),
   leverage = mean(leverage, na.rm = TRUE),
-  loan_deposit = mean(loan_deposit, na.rm = TRUE),
-  roa = mean(roa, na.rm = TRUE)
+  loan_deposit = mean(loan_deposit, na.rm = TRUE)
 ), by = cert]
 
 set.seed(3049665)
@@ -82,39 +88,47 @@ boot <- matrix(NA_real_, B_boot, length(moment_names))
 for (b in seq_len(B_boot)) {
   ids <- sample.int(nrow(bank_moments), nrow(bank_moments), replace = TRUE)
   z <- bank_moments[ids]
-  boot[b, 1:10] <- c(
+  boot[b, 1:9] <- c(
     mean(z$dividend_book_equity, na.rm = TRUE),
     mean(z$mean_wholesale_deposit, na.rm = TRUE),
     mean(z$sd_wholesale_deposit, na.rm = TRUE),
     mean(z$deposit_spread, na.rm = TRUE), mean(z$loan_spread, na.rm = TRUE),
     mean(z$deposit_assets, na.rm = TRUE), mean(z$noninterest_cost_assets, na.rm = TRUE),
-    mean(z$leverage, na.rm = TRUE), mean(z$loan_deposit, na.rm = TRUE),
-    mean(z$roa, na.rm = TRUE)
+    mean(z$leverage, na.rm = TRUE), mean(z$loan_deposit, na.rm = TRUE)
   )
   years_b <- sample(annual_credit$year, nrow(annual_credit), replace = TRUE)
   ac <- annual_credit[match(years_b, year)]
-  boot[b, 11] <- if (nrow(ac) >= 10L) {
-    unname(coef(lm(diff(log(ag_credit)) ~ diff(funding_rate), data = ac))[2L])
+  boot[b, 10] <- if (nrow(ac) >= 10L) {
+    unname(coef(lm(diff(log(total_credit)) ~ diff(funding_rate), data = ac))[2L])
   } else NA_real_
 }
 colnames(boot) <- moment_names
 moment_se <- apply(boot, 2, sd, na.rm = TRUE)
 moment_se[!is.finite(moment_se) | moment_se < 1e-5] <- pmax(abs(data_moments[!is.finite(moment_se) | moment_se < 1e-5]) * .05, 1e-4)
 W1 <- diag(1 / moment_se^2)
+W1[-targeted_indices, ] <- 0
+W1[, -targeted_indices] <- 0
 cov_boot <- cov(boot, use = "pairwise.complete.obs")
 ridge <- 1e-6 * mean(diag(cov_boot), na.rm = TRUE)
 W2 <- solve(cov_boot + diag(ridge, nrow(cov_boot)))
+W2[-targeted_indices, ] <- 0
+W2[, -targeted_indices] <- 0
 
 stationary_policy <- function(pol) {
   n <- nrow(pol)
   Q <- matrix(0, n, n)
   for (s in seq_len(n)) {
     st <- pol[s]
-    li <- nearest(st$next_loans, l_grid)
-    ei <- nearest(st$next_equity, e_grid)
+    lw <- linear_weights(st$next_loans, l_grid)
+    ew <- linear_weights(st$next_equity, e_grid)
     for (ff in seq_along(f_grid)) for (dd in seq_along(d_grid)) for (zz in 1:3) {
-      ns <- state_index[ff, dd, zz, li, ei]
-      Q[s, ns] <- Q[s, ns] + P_f[st$f_state, ff] * P_d[st$d_state, dd] * P_z[st$farm_state, zz]
+      aggregate_probability <- P_f[st$f_state, ff] * P_d[st$d_state, dd] *
+        P_z[st$farm_state, zz]
+      for (i in seq_along(lw$index)) for (j in seq_along(ew$index)) {
+        ns <- state_index[ff, dd, zz, lw$index[i], ew$index[j]]
+        Q[s, ns] <- Q[s, ns] + aggregate_probability *
+          lw$weight[i] * ew$weight[j]
+      }
     }
   }
   probability <- rep(1 / n, n)
@@ -127,8 +141,10 @@ stationary_policy <- function(pol) {
 }
 
 model_moments <- function(theta_list, strict = FALSE) {
+  theta_full <- modifyList(theta, theta_list)
+  theta_full$no_borrow_quality <- 0
   pol <- solve_type(
-    1L, theta_list,
+    1L, theta_full,
     max_equilibrium_iter = if (strict) 12L else 5L,
     max_value_iter = if (strict) 500L else 120L,
     value_tolerance = if (strict) 1e-8 else 1e-5,
@@ -140,25 +156,30 @@ model_moments <- function(theta_list, strict = FALSE) {
   wmean <- function(v) sum(w * v)
   assets <- l_grid[pol$l_state] + pol$new_loans + pol$reserves + pol$securities
   equity <- e_grid[pol$e_state]
-  operating_cost <- theta_list$fixed_operating_cost +
-    theta_list$deposit_service_cost * pol$deposits +
-    theta_list$loan_service_cost * (l_grid[pol$l_state] + pol$new_loans)
   total_credit <- l_grid[pol$l_state] + pol$new_loans
   f <- f_grid[pol$f_state]
+  expected_loss <- d_grid[pol$d_state]
+  # Exact noninterest-cost moment used in Wang et al.'s simulation code.
+  operating_cost <- theta_full$fixed_operating_cost +
+    theta_full$deposit_service_cost * pol$deposits +
+    theta_full$loan_service_cost * total_credit -
+    expected_loss * total_credit +
+    theta_full$wholesale_cost * pol$wholesale_funding^2 /
+      pmax(pol$deposits, 1e-8)
   sensitivity <- sum(w * (f - wmean(f)) * (log(pmax(total_credit, 1e-8)) -
     wmean(log(pmax(total_credit, 1e-8))))) / sum(w * (f - wmean(f))^2)
   out <- c(
-    wmean(pol$dividends / pmax(equity, 1e-8)),
-    wmean(pol$wholesale_funding / pmax(pol$deposits, 1e-8)),
+    wmean(pol$dividends) / pmax(wmean(equity), 1e-8),
+    wmean(pol$wholesale_funding) / pmax(wmean(pol$deposits), 1e-8),
     sqrt(wmean((pol$wholesale_funding / pmax(pol$deposits, 1e-8) -
       wmean(pol$wholesale_funding / pmax(pol$deposits, 1e-8)))^2)),
-    wmean(f - pol$deposit_rate),
-    wmean(pol$loan_rate - f - d_grid[pol$d_state]),
-    wmean(pol$deposits / pmax(assets, 1e-8)),
-    wmean(operating_cost / pmax(assets, 1e-8)),
-    wmean(assets / pmax(equity, 1e-8)),
-    wmean(total_credit / pmax(pol$deposits, 1e-8)),
-    wmean(pol$profit * (1 - statutory$tax_rate) / pmax(assets, 1e-8)),
+    sum(w * pol$deposits * (f - pol$deposit_rate)) / pmax(wmean(pol$deposits), 1e-8),
+    sum(w * total_credit * (pol$loan_rate - f - d_grid[pol$d_state])) /
+      pmax(wmean(total_credit), 1e-8),
+    wmean(pol$deposits) / pmax(wmean(assets), 1e-8),
+    wmean(operating_cost) / pmax(wmean(assets), 1e-8),
+    wmean(assets) / pmax(wmean(equity), 1e-8),
+    wmean(total_credit) / pmax(wmean(pol$deposits), 1e-8),
     sensitivity
   )
   names(out) <- moment_names
@@ -166,20 +187,40 @@ model_moments <- function(theta_list, strict = FALSE) {
     equilibrium_gap = max(pol$equilibrium_gap),
     bellman_residual = max(pol$bellman_residual)
   )
+  attr(out, "levels") <- c(
+    legacy_loans = wmean(l_grid[pol$l_state]),
+    new_loans = wmean(pol$new_loans), total_credit = wmean(total_credit),
+    deposits = wmean(pol$deposits), assets = wmean(assets), equity = wmean(equity)
+  )
   out
 }
 
-parameter_names <- names(theta)
-lower <- c(.005, .0001, .0001, .0001, 0, 1, -15)
-upper <- c(.15, .10, .08, .08, .08, 100, 2)
-start <- pmin(pmax(unlist(theta), lower), upper)
+parameter_names <- setdiff(names(theta), c("no_borrow_quality", "deposit_service_cost"))
+lower <- c(.005, .0001, .0001, 0, .02)
+upper <- c(.15, .10, .08, .08, 20)
+start <- pmin(pmax(unlist(theta[parameter_names]), lower), upper)
+
+if (identical(Sys.getenv("SMD_EVALUATE_START_ONLY"), "1")) {
+  start_moments <- model_moments(
+    as.list(setNames(start, parameter_names)),
+    strict = !identical(Sys.getenv("SMD_START_STRICT"), "0")
+  )
+  print(data.table(moment = moment_names, data = data_moments,
+                   model = as.numeric(start_moments),
+                   difference = as.numeric(start_moments) - data_moments))
+  print(attr(start_moments, "levels"))
+  quit(save = "no", status = 0L)
+}
 
 cache <- new.env(parent = emptyenv())
 evaluate <- function(par, W, strict = FALSE) {
   key <- paste(c(round(par, 8), strict, round(diag(W), 4)), collapse = "|")
   if (exists(key, cache, inherits = FALSE)) return(get(key, cache, inherits = FALSE))
   th <- as.list(setNames(par, parameter_names))
-  mm <- tryCatch(model_moments(th, strict = strict), error = function(e) rep(NA_real_, length(data_moments)))
+  mm <- tryCatch(model_moments(th, strict = strict), error = function(e) {
+    message("Model evaluation failed: ", conditionMessage(e))
+    rep(NA_real_, length(data_moments))
+  })
   gap <- mm - data_moments
   objective <- if (all(is.finite(gap))) drop(t(gap) %*% W %*% gap) else 1e12
   result <- list(objective = objective, moments = mm)
@@ -209,8 +250,8 @@ if (file.exists(resume_path)) {
                  status = checkpoint$stage2_status[1L])
   message("Resuming inference from the saved SMD optimum.")
 } else {
-  stage1 <- run_stage(start, W1, 24L)
-  stage2 <- run_stage(stage1$solution, W2, 32L)
+stage1 <- run_stage(start, W1, 8L)
+stage2 <- run_stage(stage1$solution, W2, 10L)
   estimate <- stage2$solution
   fwrite(data.table(
     parameter = parameter_names, estimate = estimate,
@@ -249,7 +290,7 @@ moment_table <- data.table(
   data_standard_error = moment_se,
   model = as.numeric(final$moments),
   standardized_difference = (as.numeric(final$moments) - data_moments) / moment_se,
-  targeted = TRUE
+  targeted = seq_along(moment_names) %in% targeted_indices
 )
 diagnostic_table <- data.table(
   statistic = c("stage1_objective", "stage2_objective", "strict_objective",

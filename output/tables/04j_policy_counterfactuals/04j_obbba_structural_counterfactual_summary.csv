@@ -1,17 +1,17 @@
-scenario,bank_type,identification,agricultural_loan_change_percent,loan_rate_change_basis_points,deposit_rate_change_basis_points,change_wholesale_funding_from_no_policy,change_securities_from_no_policy,change_next_equity_from_no_policy,equilibrium_gap
-A_no_policy,agricultural_banks,baseline,0,0,0,0,0,0,0.00656719263287321
-B1_deposit_funding_only,agricultural_banks,estimated total-FSA deposit response; structural allocation,0,0,0,0,0.000536279219593039,6.32051748231111e-07,0.00656719263287321
-B2_borrower_liquidity_only,agricultural_banks,descriptive total-FSA lending reduced form,-1.31524861793697,-2.38954403486424e-05,0,0,0.00152786349330497,-0.000110641365531586,0.00656719725817102
-B3_default_risk_only,agricultural_banks,calibrated 10-percent charge-off reduction,-5.88355031782066,14.6127603418747,0,0,0.00683464830833386,-0.000403472966958099,0.00656719263287321
-B4_marketing_loan_outside_credit_only,agricultural_banks,statutory MAL rate change; outside-option elasticity calibrated,-9.11058049553515,-0.00016552168996542,0,0,0.0105833400256893,-0.000766400164885411,0.00656722467153601
-B5_obbba_no_default_effect,agricultural_banks,default-risk sensitivity,-4.27706289320806,-19.4756672244116,0,0,0.00550474538179457,-0.000410052710227961,0.00404998335664354
-B6_obbba_chargeoffs_down_25pct,agricultural_banks,combined estimated and calibrated channels,0.322673688505404,-40.1366768995361,0,0,0.000161444118309484,8.72393385672465e-05,0.00404998335664354
-B_obbba_current_market_power,agricultural_banks,combined estimated and calibrated channels,-6.56464981567625,-14.6125726059876,0,0,0.00816212931585519,-0.000557062344342829,0.00404998335664354
-A_no_policy,nonagricultural_banks,baseline,0,0,0,0,0,0,0.00394210834481554
-B1_deposit_funding_only,nonagricultural_banks,estimated total-FSA deposit response; structural allocation,0,0,-8.67361737988404e-15,0,6.50692503665895e-05,8.43911812445364e-08,0.00394210834481554
-B2_borrower_liquidity_only,nonagricultural_banks,descriptive total-FSA lending reduced form,-0.189738818368213,-1.40047043406533e-06,0,0,5.83486641066444e-05,-4.12251403572594e-06,0.00394210834481554
-B3_default_risk_only,nonagricultural_banks,calibrated 10-percent charge-off reduction,0,0,0,0,0,1.36277190460124e-05,0.00394210834481554
-B4_marketing_loan_outside_credit_only,nonagricultural_banks,statutory MAL rate change; outside-option elasticity calibrated,-9.11205247559315,-6.72561906167601e-05,0,0,0.00280214715044969,-0.000197980387044439,0.00394210834481554
-B5_obbba_no_default_effect,nonagricultural_banks,default-risk sensitivity,-9.28450696097508,-6.85290743596134e-05,-8.67361737988404e-15,0,0.00292024977020144,-0.00020164296794245,0.00394210834481554
-B6_obbba_chargeoffs_down_25pct,nonagricultural_banks,combined estimated and calibrated channels,3.61741622420551,-20.1014455935007,-8.67361737988404e-15,0,-0.00104736206977774,6.92362545698794e-05,0.00598480017170328
-B_obbba_current_market_power,nonagricultural_banks,combined estimated and calibrated channels,-9.28450696097508,-6.85290743596134e-05,-8.67361737988404e-15,0,0.00292024977020144,-0.000188396225389763,0.00394210834481554
+scenario,bank_type,identification,total_loan_change_percent,agricultural_loan_change_percent,total_loan_rate_change_basis_points,agricultural_loan_rate_change_basis_points,deposit_rate_change_basis_points,change_wholesale_funding_from_no_policy,change_securities_from_no_policy,change_next_equity_from_no_policy,equilibrium_gap
+A_no_policy,agricultural_banks,baseline,0,0,0,0,0,0,0,0,0.000399846566005571
+B1_deposit_funding_only,agricultural_banks,estimated total-FSA deposit response; structural allocation,0,0,0,0,0,-6.11391956536617e-05,0.00101458558422346,0,0.000399846566005571
+B2_borrower_liquidity_only,agricultural_banks,descriptive total-FSA lending reduced form,-0.294965505031353,-1.3151227068401,0,0,0,-8.01469906011251e-05,0.000392210092931333,0,0.000399846566014134
+B3_default_risk_only,agricultural_banks,calibrated 10-percent charge-off reduction,0.0460869234351291,0,-0.0394086639431135,0,0,1.20788547112935e-05,-6.17246388208703e-05,0,0.000400255898611021
+B4_marketing_loan_outside_credit_only,agricultural_banks,statutory MAL rate change; outside-option elasticity calibrated,-2.10876907240251,-9.109777214276,0,0,0,-0.000549722477774732,0.00282725548030083,0,0.000399846566066647
+B5_obbba_no_default_effect,agricultural_banks,default-risk sensitivity,-2.39751454706598,-10.3051573773045,0,0,0,-0.000677592730196026,0.00423750634891768,0,0.000399846566075029
+B6_obbba_chargeoffs_down_25pct,agricultural_banks,combined estimated and calibrated channels,-2.28500966824009,-10.3051573773045,-0.0985216598577143,0,0,-0.000649082139810103,0.00408585188427546,0,0.0004008701368928
+B_obbba_current_market_power,agricultural_banks,combined estimated and calibrated channels,-2.35253254482958,-10.3051573773045,-0.0394086639431135,0,0,-0.000666193549485217,0.00417687145437085,0,0.000400255898677412
+A_no_policy,nonagricultural_banks,baseline,0,0,0,0,0,0,0,0,0.000442874886182693
+B1_deposit_funding_only,nonagricultural_banks,estimated total-FSA deposit response; structural allocation,0,0,0,0,0,-1.53754300924111e-05,0.000138770210007133,0,0.000442874886182693
+B2_borrower_liquidity_only,nonagricultural_banks,descriptive total-FSA lending reduced form,-0.00640607308864949,-0.189747022473852,0,0,0,-2.88922710820622e-06,7.92290679607621e-06,0,0.000442874886184386
+B3_default_risk_only,nonagricultural_banks,calibrated 10-percent charge-off reduction,0.0103561498107307,0,-0.00888356449679773,0,0,4.56254815662388e-06,-1.29165028839306e-05,0,0.000442981365116682
+B4_marketing_loan_outside_credit_only,nonagricultural_banks,statutory MAL rate change; outside-option elasticity calibrated,-0.321758184259102,-9.11241125119926,0,0,0,-0.000144580384975716,0.000398481257447736,0,0.000442874886268527
+B5_obbba_no_default_effect,nonagricultural_banks,default-risk sensitivity,-0.328143646870283,-9.28487183312895,0,0,0,-0.000161818979169594,0.000546165651010455,0,0.000442874886270248
+B6_obbba_chargeoffs_down_25pct,nonagricultural_banks,combined estimated and calibrated channels,-0.302335649171104,-9.28487183312895,-0.0222089112417168,0,0,-0.000150693210876574,0.00051373282684547,0,0.0004431410957597
+B_obbba_current_market_power,nonagricultural_banks,combined estimated and calibrated channels,-0.317821477536084,-9.28487183312895,-0.00888356449679773,0,0,-0.000157369115759427,0.000533193815435984,0,0.000442981365203612

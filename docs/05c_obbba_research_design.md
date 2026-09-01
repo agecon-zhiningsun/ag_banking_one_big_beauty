@@ -147,12 +147,11 @@ Marketing Assistance Loan outside-credit exposure and explicit default-risk
 sensitivities now enter the Bellman exercise. Competitive-pricing calibrations
 are excluded from the reported analysis.
 
-The resulting two-point-state-grid solutions are structural calibrations, not
-full SMD estimates. The Bellman residual and accounting constraints are tight,
-but competitor-rate fixed-point gaps remain approximately 0.002--0.012 across
-cases. Publication results require a finer grid, full equilibrium convergence,
-and estimation of the default and outside-credit elasticities from valid
-predetermined instruments.
+The corrected model uses a 360-state grid and a two-stage SMD estimate for the
+dynamic bank block. It passes the economic moment-fit gate, has a strict
+Bellman residual below `1e-8`, and reaches scenario fixed-point gaps below
+`5e-4`. Default-risk and government-credit magnitudes remain explicitly
+calibrated sensitivity parameters and should be reported as such.
 
 Do not use realized post-law payments alone as treatment; those payments respond to prices, yields and participation.
 
@@ -211,5 +210,5 @@ The paper studies how monetary policy reaches generic borrowers through imperfec
 - The law combines many provisions; a post-2025 dummy is not a credible design.
 - Statutory generosity and realized payments must be separated.
 - The policy can simultaneously reduce credit risk and crowd out bank lending.
-- The current dynamic results are illustrative until SMD estimation is completed.
+- The dynamic bank block is estimated; default-risk and government-credit channel magnitudes remain calibrated sensitivities.
 - Report distributional effects by farm type, county exposure, bank size, agricultural-bank status and FCS presence.

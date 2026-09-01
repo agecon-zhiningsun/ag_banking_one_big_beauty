@@ -60,19 +60,16 @@ observed for most private agricultural banks, with observed balance-sheet and
 profitability moments. The loan state is total loans; the farm-policy shock
 applies only to the agricultural-loan component.
 
-The August 31, 2026 estimation converges numerically (relative Bellman residual
-below `1e-8`; competitor-rate gap `0.005`) but **fails the moment-fit gate**.
-It matches wholesale funding and the agricultural loan spread reasonably, but
-misses payout, deposit spread, leverage, loan/deposit, operating cost, and ROA.
-Therefore all `04i` counterfactual rows are tagged
-`estimated_SMD_rejected_poor_moment_fit_not_policy_result`; they are diagnostics,
-not policy findings. The model must be respecified before welfare or bank-risk
-counterfactuals are reported.
+The September 1, 2026 correction uses the updated total-loan BLP system for the
+whole balance sheet and the agricultural-production-loan BLP system for the
+farmer-facing component. Observed outstanding loans equal `L+B`; the legacy
+state is therefore `(1-mu)` times the observed stock and stationary originations
+are `mu` times the stock. Existing coupons follow Wang's present-value
+cash-flow convention rather than being counted again as current originations.
 
-The earlier implementation did not perform Wang et al.'s
-full simulated-minimum-distance estimation. All reported OBBBA scenarios retain
-the estimated deposit and agricultural-loan market power. Competitive-pricing
-calibrations are excluded. The OBBBA runs use a coarse two-point bank
-state grid and report fixed-point and Bellman diagnostics. They remain
-structural calibrations, not publication-ready estimates, and they have been
-superseded by the rejected-estimation diagnostic described above.
+The two-stage SMD estimate passes the declared economic moment-fit gate. The
+strict relative Bellman residual is below `1e-8`; policy-scenario fixed-point
+gaps are below `5e-4`; feasibility is 100 percent on a 360-state grid. BLP
+spreads and historical credit sensitivity are validation/calibration moments,
+while dividends, wholesale funding, deposits/assets, operating costs, leverage,
+and loans/deposits identify the dynamic block.

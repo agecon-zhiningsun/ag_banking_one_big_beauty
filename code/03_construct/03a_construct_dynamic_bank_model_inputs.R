@@ -20,6 +20,10 @@ blp_path <- file.path(
   data_root, "processed", "nc1177", "blp_market_power",
   "03b_ag_production_bank_year.parquet"
 )
+total_blp_path <- file.path(
+  data_root, "processed", "nc1177", "blp_market_power",
+  "total_loans_bank_year.parquet"
+)
 deposit_blp_path <- file.path(
   data_root, "processed", "nc1177", "blp_market_power",
   "03b_deposits_bank_year.parquet"
@@ -37,7 +41,8 @@ fred_path <- file.path(
 out_dir <- file.path(data_root, "processed", "nc1177", "dynamic_bank_model")
 dir.create(out_dir, recursive = TRUE, showWarnings = FALSE)
 
-required <- c(bank_quarter_path, market_path, blp_path, deposit_blp_path, ers_zip, fred_path)
+required <- c(bank_quarter_path, market_path, blp_path, total_blp_path,
+              deposit_blp_path, ers_zip, fred_path)
 missing <- required[!file.exists(required)]
 if (length(missing)) stop("Missing required input(s):\n", paste(missing, collapse = "\n"))
 wang_files <- sort(list.files(wang_raw_dir, pattern = "\\.csv$", full.names = TRUE))
@@ -81,6 +86,24 @@ keep_blp <- intersect(c(
   "blp_ag_markup"
 ), names(blp))
 blp <- unique(blp[, ..keep_blp], by = c("cert", "year"))
+
+total_blp <- as.data.table(read_parquet(total_blp_path))
+setnames(
+  total_blp,
+  old = intersect(c("shares", "prices", "structural_margin", "own_demand_derivative"),
+                  names(total_blp)),
+  new = c(
+    shares = "blp_total_share", prices = "blp_total_rate",
+    structural_margin = "blp_total_markup",
+    own_demand_derivative = "total_own_rate_derivative"
+  )[intersect(c("shares", "prices", "structural_margin", "own_demand_derivative"),
+              names(total_blp))]
+)
+keep_total_blp <- intersect(c(
+  "cert", "year", "blp_total_share", "blp_total_rate",
+  "total_own_rate_derivative", "blp_total_markup"
+), names(total_blp))
+total_blp <- unique(total_blp[, ..keep_total_blp], by = c("cert", "year"))
 
 deposit_blp <- as.data.table(read_parquet(deposit_blp_path))
 if ("own_demand_derivative" %in% names(deposit_blp) &&
@@ -198,6 +221,7 @@ fred_year <- fred[year(date) >= 1994L & year(date) <= 2025L, .(
 panel <- merge(market, bank_year_balance, by = c("cert", "year"), all.x = TRUE,
                suffixes = c("", "_q4"))
 panel <- merge(panel, blp, by = c("cert", "year"), all.x = TRUE)
+panel <- merge(panel, total_blp, by = c("cert", "year"), all.x = TRUE)
 panel <- merge(panel, deposit_blp, by = c("cert", "year"), all.x = TRUE)
 panel <- merge(panel, wang, by = c("cert", "year"), all.x = TRUE)
 panel <- merge(panel, ers[year >= 1994L], by = "year", all.x = TRUE)
@@ -233,6 +257,7 @@ model_panel <- panel[
   is.finite(ag_production_loan_ratio) & ag_production_loan_ratio >= 0 &
     is.finite(capital_ratio) & capital_ratio > 0 &
     is.finite(farm_downturn_state) &
+    is.finite(blp_total_markup) & blp_total_markup >= 0 &
     is.finite(blp_ag_markup) & blp_ag_markup >= 0 &
     is.finite(blp_deposit_markdown) & blp_deposit_markdown >= 0 &
     is.finite(net_chargeoff_rate) & net_chargeoff_rate >= 0

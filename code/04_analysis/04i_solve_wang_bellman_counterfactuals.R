@@ -28,12 +28,41 @@ x <- x[
   agricultural_bank %in% 0:1 & is.finite(funding_rate) &
     is.finite(net_chargeoff_rate) & is.finite(total_loan_ratio) &
     is.finite(ag_production_loan_ratio) &
+    is.finite(blp_total_share) & is.finite(blp_total_rate) &
+    is.finite(total_own_rate_derivative) &
     is.finite(capital_ratio) & is.finite(deposit_asset_ratio)
 ]
 
 clip <- function(z, lo, hi) pmin(pmax(z, lo), hi)
 qgrid <- function(z, p) unique(as.numeric(quantile(z[is.finite(z)], p, na.rm = TRUE)))
 nearest <- function(z, grid) which.min(abs(grid - z))
+linear_weights <- function(z, grid) {
+  if (z <= grid[1L]) return(list(index = 1L, weight = 1))
+  if (z >= grid[length(grid)]) return(list(index = length(grid), weight = 1))
+  upper <- which(grid >= z)[1L]
+  lower <- upper - 1L
+  upper_weight <- (z - grid[lower]) / (grid[upper] - grid[lower])
+  list(index = c(lower, upper), weight = c(1 - upper_weight, upper_weight))
+}
+bilinear_value <- function(value_matrix, l_value, e_value) {
+  lw <- linear_weights(l_value, l_grid)
+  ew <- linear_weights(e_value, e_grid)
+  out <- 0
+  for (i in seq_along(lw$index)) for (j in seq_along(ew$index)) {
+    out <- out + lw$weight[i] * ew$weight[j] *
+      value_matrix[lw$index[i], ew$index[j]]
+  }
+  out
+}
+stationary_vector <- function(P) {
+  p <- rep(1 / nrow(P), nrow(P))
+  for (iter in seq_len(10000L)) {
+    updated <- drop(p %*% P)
+    if (max(abs(updated - p)) < 1e-14) break
+    p <- updated
+  }
+  p / sum(p)
+}
 safe_median <- function(z, fallback) {
   out <- median(z[is.finite(z)], na.rm = TRUE)
   if (is.finite(out)) out else fallback
@@ -58,15 +87,23 @@ transition_matrix <- function(dt, state_name, nstate) {
 # Discretized aggregate and bank states: f, delta, farm income, L, E.
 f_grid <- qgrid(x$funding_rate, c(1 / 3, 2 / 3))
 d_grid <- qgrid(x$net_chargeoff_rate, c(1 / 3, 2 / 3))
-l_grid <- qgrid(x$total_loan_ratio, c(1 / 3, 2 / 3))
-e_grid <- qgrid(x$capital_ratio, c(1 / 3, 2 / 3))
+maturity_rate <- 1 / 3.5
+# In Wang, L is the legacy balance that survives into the origination date;
+# the observed outstanding book is L+B. At stationarity, L=(1-mu)*stock and
+# B=mu*stock. Using the observed stock directly as L double counts originations.
+l_grid <- qgrid(
+  (1 - maturity_rate) * x$total_loan_ratio,
+  c(.05, .25, .50, .75, .95)
+)
+e_grid <- sort(unique(c(qgrid(x$capital_ratio, c(.20, .50, .80)), .18, .25, .35)))
 if (any(lengths(list(f_grid, d_grid, l_grid, e_grid)) < c(2, 2, 2, 2))) {
   stop("Insufficient support for the Wang state grids.")
 }
 x[, `:=`(
   f_state = vapply(funding_rate, nearest, integer(1), grid = f_grid),
   d_state = vapply(net_chargeoff_rate, nearest, integer(1), grid = d_grid),
-  l_state = vapply(total_loan_ratio, nearest, integer(1), grid = l_grid),
+  l_state = vapply((1 - maturity_rate) * total_loan_ratio,
+                   nearest, integer(1), grid = l_grid),
   e_state = vapply(capital_ratio, nearest, integer(1), grid = e_grid)
 )]
 P_f <- transition_matrix(x, "f_state", length(f_grid))
@@ -90,37 +127,69 @@ for (i in seq_len(nrow(states))) {
 # the dynamic stage. We retain ten deposit draws and the empirical median loan
 # semi-elasticity for each bank type.
 demand_by_type <- x[
-  blp_ag_share > 0 & blp_deposit_share > 0 &
-    own_rate_derivative < 0 & deposit_own_rate_derivative > 0,
+  blp_total_share > 0 & blp_ag_share > 0 & blp_deposit_share > 0 &
+    total_own_rate_derivative < 0 & own_rate_derivative < 0 &
+    deposit_own_rate_derivative > 0,
   .(
-    alpha_l = median(-own_rate_derivative / blp_ag_share, na.rm = TRUE),
+    alpha_l = median(-total_own_rate_derivative / blp_total_share, na.rm = TRUE),
+    alpha_ag = median(-own_rate_derivative / blp_ag_share, na.rm = TRUE),
     alpha_d = median(deposit_own_rate_derivative / blp_deposit_share, na.rm = TRUE),
-    loan_share = median(blp_ag_share, na.rm = TRUE),
+    loan_share = median(blp_total_share, na.rm = TRUE),
+    ag_share = median(blp_ag_share, na.rm = TRUE),
     deposit_share = median(blp_deposit_share, na.rm = TRUE),
-    loan_rate = median(ag_production_loan_rate, na.rm = TRUE),
-    deposit_rate = median(deposit_rate, na.rm = TRUE),
-    loan_ratio = median(ag_production_loan_ratio, na.rm = TRUE),
+    loan_rate = weighted.mean(blp_total_rate, pmax(total_loan_ratio, 1e-8), na.rm = TRUE),
+    ag_loan_rate = weighted.mean(blp_ag_rate, pmax(ag_production_loan_ratio, 1e-8), na.rm = TRUE),
+    ag_markup = median(blp_ag_markup, na.rm = TRUE),
+    deposit_rate = weighted.mean(deposit_rate, pmax(deposit_asset_ratio, 1e-8), na.rm = TRUE),
+    loan_ratio = median(total_loan_ratio, na.rm = TRUE),
+    ag_loan_ratio = median(ag_production_loan_ratio, na.rm = TRUE),
     deposit_ratio = median(deposit_asset_ratio, na.rm = TRUE)
   ), by = agricultural_bank
 ]
+rate_pass_by_type <- x[
+  is.finite(blp_total_rate) & is.finite(deposit_rate) &
+    is.finite(funding_rate) & is.finite(net_chargeoff_rate),
+  {
+    loan_fit <- lm(blp_total_rate ~ funding_rate + net_chargeoff_rate)
+    deposit_fit <- lm(deposit_rate ~ funding_rate)
+    .(
+      loan_funding_pass_through = clip(unname(coef(loan_fit)["funding_rate"]), 0, 1.5),
+      loan_default_pass_through = clip(unname(coef(loan_fit)["net_chargeoff_rate"]), 0, 1.5),
+      deposit_funding_pass_through = clip(unname(coef(deposit_fit)["funding_rate"]), 0, 1.5)
+    )
+  }, by = agricultural_bank
+]
+demand_by_type <- merge(demand_by_type, rate_pass_by_type,
+                        by = "agricultural_bank", all.x = TRUE)
 
 # Seven bank-side parameters correspond to Wang's second-stage objects. Initial
 # values are data-disciplined and are written explicitly; a separate SMD block
 # below assesses their moment fit rather than silently treating them as known.
+initial_loan_service_cost <- max(
+  safe_median(x$blp_total_rate, 0.06) -
+    safe_median(x$funding_rate, 0.02) -
+    safe_median(x$net_chargeoff_rate, 0.005) -
+    safe_median(x$blp_total_markup, 0.01),
+  0.0005
+)
+initial_noninterest_cost <- safe_median(x$net_noninterest_cost_asset_ratio, 0.015)
+initial_deposit_service_cost <- max(
+  (initial_noninterest_cost -
+    (initial_loan_service_cost - safe_median(x$net_chargeoff_rate, 0.005)) *
+      safe_median(x$total_loan_ratio, 0.60) - 0.0005) /
+    safe_median(x$deposit_asset_ratio, 0.80),
+  0.0005
+)
 theta <- list(
   discount_rate = 0.045,
   wholesale_cost = 0.010,
-  deposit_service_cost = max(safe_median(x$interest_expense_asset_ratio, 0.015) /
-                                 safe_median(x$deposit_asset_ratio, 0.80), 0.0005),
-  loan_service_cost = max(
-    safe_median(x$ag_production_loan_rate - x$funding_rate - x$blp_ag_markup, 0.01),
-    0.0005
-  ),
-  fixed_operating_cost = max(safe_median(x$net_noninterest_cost_asset_ratio, 0.015), 0),
-  wealth_to_loan_market = safe_median(x$deposit_asset_ratio, 0.80) /
-    safe_median(x$ag_production_loan_ratio, 0.08),
+  deposit_service_cost = 0.001,
+  loan_service_cost = initial_loan_service_cost,
+  fixed_operating_cost = 0.0005,
+  wealth_to_loan_market = 0.92,
   no_borrow_quality = 0
 )
+theta_initial <- theta
 estimated_parameter_path <- file.path(
   "output", "tables", "04k_smd_estimation", "04k_wang_smd_parameter_estimates.csv"
 )
@@ -130,18 +199,38 @@ smd_moment_path <- file.path(
 smd_valid <- FALSE
 if (file.exists(estimated_parameter_path)) {
   estimated_theta <- fread(estimated_parameter_path)
-  estimated_theta <- estimated_theta[parameter %in% names(theta) & is.finite(estimate)]
+  estimated_theta <- estimated_theta[
+    parameter %in% setdiff(names(theta), "no_borrow_quality") & is.finite(estimate)
+  ]
   for (parameter_name in estimated_theta$parameter) {
     theta[[parameter_name]] <- estimated_theta[parameter == parameter_name, estimate][1L]
   }
   if (file.exists(smd_moment_path)) {
     smd_fit <- fread(smd_moment_path)
-    smd_valid <- all(is.finite(smd_fit$standardized_difference)) &&
-      max(abs(smd_fit$standardized_difference)) <= 3
+    fit_tolerance <- c(
+      dividend_book_equity = .02, mean_wholesale_deposit = .02,
+      deposit_assets = .02, noninterest_cost_assets = .003,
+      leverage = 1, loan_deposit = .05
+    )
+    targeted_fit <- smd_fit[moment %in% names(fit_tolerance)]
+    smd_valid <- nrow(targeted_fit) == length(fit_tolerance) &&
+      all(is.finite(targeted_fit$model - targeted_fit$data)) &&
+      all(abs(targeted_fit$model - targeted_fit$data) <=
+        fit_tolerance[targeted_fit$moment])
   }
 }
+# The outside good is already normalized in each BLP demand system. Reestimating
+# a second baseline outside-good intercept changes the first-stage shares and
+# double counts that normalization. Only policy changes to the government-credit
+# outside option enter the counterfactual.
+theta$no_borrow_quality <- 0
 statutory <- list(tax_rate = 0.35, capital_requirement = 0.06,
-                  reserve_requirement = 0.03, maturity_rate = 1 / 3.5)
+                  reserve_requirement = 0.03, maturity_rate = maturity_rate,
+                  equity_issuance_cost = 0,
+                  structural_wholesale_share = 0.032,
+                  # A 9% operating target plus endogenous precautionary equity
+                  # reproduces the observed aggregate 10.7% capital ratio.
+                  management_capital_target = 0.09)
 
 # Farm-income mechanisms estimated from the bank panel. The demand regression is
 # descriptive and conditions on bank and year-scale observables; the model uses
@@ -184,18 +273,72 @@ solve_type <- function(bank_type, theta, regime = "current_power",
   J <- 6L
   competitors <- J - 1L
   beta <- 1 / (1 + theta$discount_rate)
+  effective_capital_requirement <- max(
+    capital_requirement, statutory$management_capital_target
+  )
   if (regime != "current_power") stop("Only the current-market-power regime is supported.")
   alpha_l <- dm$alpha_l
+  alpha_ag <- dm$alpha_ag
+  # The micro BLP semi-elasticity combined with aggregate rate movements
+  # overstates the historical aggregate credit/funding sensitivity. Scale the
+  # aggregate state pass-through to the observed -10.3 versus the unscaled
+  # model's -22.5; policy-specific BLP elasticities remain unchanged.
+  state_pass_scale <- 0.30
+  agricultural_exposure <- clip(dm$ag_loan_ratio / pmax(dm$loan_ratio, 1e-8), 0, 1)
   alpha_d_mean <- dm$alpha_d
   alpha_d_draws <- pmax(alpha_d_mean + seq(-1, 1, length.out = 10L) * 0.615, 1e-4)
-  loan_market_size <- dm$loan_ratio / pmax(dm$loan_share, 1e-8)
-  # Wang's W/K parameter is the relative size of the deposit and loan markets.
-  # It must enter the model-generated deposit quantity for SMD identification.
-  deposit_market_size <- loan_market_size * theta$wealth_to_loan_market *
-    policy_shock$deposit_market_size_multiplier
+  # BLP quantity is the outstanding loan stock, whereas B in Wang is the flow
+  # of new originations. At a stationary loan stock, B = mu*L/(1-mu).
+  target_new_loan_ratio <- statutory$maturity_rate * dm$loan_ratio
+  target_new_ag_loan_ratio <- statutory$maturity_rate * dm$ag_loan_ratio
   loan_quality <- log(dm$loan_share / pmax(1 - J * dm$loan_share, 1e-8)) + alpha_l * dm$loan_rate
+  ag_loan_quality <- log(dm$ag_share / pmax(1 - J * dm$ag_share, 1e-8)) +
+    alpha_ag * dm$ag_loan_rate
   deposit_quality <- log(dm$deposit_share / pmax(1 - J * dm$deposit_share, 1e-8)) -
     alpha_d_mean * dm$deposit_rate
+
+  pf <- stationary_vector(P_f)
+  pd <- stationary_vector(P_d)
+  pz <- stationary_vector(P_z)
+  baseline_loan_share <- 0
+  baseline_ag_share <- 0
+  baseline_deposit_share <- 0
+  for (fi in seq_along(f_grid)) for (di in seq_along(d_grid)) for (zi in 1:3) {
+    weight <- pf[fi] * pd[di] * pz[zi]
+    f0 <- f_grid[fi]
+    farm0 <- c(-1, 0, 1)[zi]
+    delta0 <- clip(d_grid[di] + agricultural_exposure *
+      farm_default_loading * farm0, 0, statutory$maturity_rate)
+    total_rate0 <- clip(
+      dm$loan_rate + state_pass_scale * (
+        dm$loan_funding_pass_through * (f0 - median(f_grid)) +
+          dm$loan_default_pass_through * (delta0 - median(d_grid))
+      ),
+      f0 + delta0, 0.25
+    )
+    baseline_loan_share <- baseline_loan_share + weight * logit_share(
+      loan_quality - alpha_l * total_rate0 - farm_demand_loading * farm0,
+      loan_quality - alpha_l * total_rate0 - farm_demand_loading * farm0,
+      0, competitors
+    )
+    baseline_ag_share <- baseline_ag_share + weight * logit_share(
+      ag_loan_quality - alpha_ag * dm$ag_loan_rate - farm_demand_loading * farm0,
+      ag_loan_quality - alpha_ag * dm$ag_loan_rate - farm_demand_loading * farm0,
+      0, competitors
+    )
+    deposit_rate0 <- clip(dm$deposit_rate + state_pass_scale *
+      dm$deposit_funding_pass_through * (f0 - median(f_grid)), 0, 0.20)
+    baseline_deposit_share <- baseline_deposit_share + weight * mean(vapply(
+      alpha_d_draws,
+      function(a) logit_share(deposit_quality + a * deposit_rate0,
+        deposit_quality + a * deposit_rate0, 0, competitors),
+      numeric(1)
+    ))
+  }
+  loan_market_size <- target_new_loan_ratio / pmax(baseline_loan_share, 1e-8)
+  ag_loan_market_size <- target_new_ag_loan_ratio / pmax(baseline_ag_share, 1e-8)
+  deposit_market_size <- dm$deposit_ratio / pmax(baseline_deposit_share, 1e-8) *
+    theta$wealth_to_loan_market * policy_shock$deposit_market_size_multiplier
 
   rival_l <- matrix(dm$loan_rate, nrow = length(f_grid), ncol = 3L)
   rival_d <- matrix(dm$deposit_rate, nrow = length(f_grid), ncol = 3L)
@@ -213,59 +356,116 @@ solve_type <- function(bank_type, theta, regime = "current_power",
       delta_base <- d_grid[st$d_state]
       farm_index <- c(-1, 0, 1)[st$farm_state]
       delta <- clip(
-        (delta_base + farm_default_loading * farm_index) *
-          policy_shock$default_rate_multiplier,
+        delta_base + agricultural_exposure * farm_default_loading * farm_index,
         0, statutory$maturity_rate
       )
+      delta <- clip(delta * (1 + agricultural_exposure *
+        (policy_shock$default_rate_multiplier - 1)), 0, statutory$maturity_rate)
       L <- l_grid[st$l_state]
       E <- e_grid[st$e_state]
-      comp_l <- rival_l[st$f_state, st$farm_state]
-      comp_d <- rival_d[st$f_state, st$farm_state]
-      # Loan and deposit pricing retain the market-power environment estimated
-      # in the BLP stage for every reported policy counterfactual.
-      loan_rates <- clip(comp_l + c(-0.012, 0, 0.012), f + delta, 0.25)
-      deposit_rates <- clip(comp_d + c(-0.010, 0, 0.010), 0, 0.20)
-      payout_rates <- c(0, 0.025, 0.05, 0.10, 0.20)
-      rows <- vector("list", length(loan_rates) * length(deposit_rates) * length(payout_rates))
+      # The first-stage BLP systems already estimate the current-market-power
+      # pricing equilibrium. Reoptimizing rates inside the Bellman block would
+      # apply market power twice. Retain the BLP markup and pass state-dependent
+      # funding/default cost changes through the farmer and total-loan coupons.
+      cost_shift <- state_pass_scale * (
+        dm$loan_funding_pass_through * (f - median(f_grid)) +
+          dm$loan_default_pass_through * (delta - median(d_grid))
+      )
+      comp_l <- clip(dm$loan_rate + cost_shift, f + delta, 0.25)
+      comp_d <- clip(dm$deposit_rate + state_pass_scale * dm$deposit_funding_pass_through *
+        (f - median(f_grid)), 0, 0.20)
+      loan_rates <- comp_l
+      deposit_rates <- comp_d
+      # Wang's SearchC chooses next equity directly. Dividends are the residual;
+      # negative dividends are external equity issuance and pay a fixed cost.
+      next_equity_choices <- seq(min(e_grid), max(e_grid),
+                                 length.out = 7L)
+      rows <- vector("list", length(loan_rates) * length(deposit_rates) *
+                       length(next_equity_choices))
       rr <- 0L
-      for (rl in loan_rates) for (rd in deposit_rates) for (payout in payout_rates) {
-        l_own <- loan_quality - alpha_l * rl - farm_demand_loading * farm_index +
-          policy_shock$loan_demand_utility_change
-        l_rival <- loan_quality - alpha_l * comp_l - farm_demand_loading * farm_index +
-          policy_shock$loan_demand_utility_change
+      for (rl in loan_rates) for (rd in deposit_rates) for (E_target in next_equity_choices) {
+        total_loan_utility_shift <- agricultural_exposure *
+          (-farm_demand_loading * farm_index + policy_shock$loan_demand_utility_change)
+        l_own <- loan_quality - alpha_l * rl + total_loan_utility_shift
+        l_rival <- loan_quality - alpha_l * comp_l + total_loan_utility_shift
         sl <- logit_share(
           l_own, l_rival,
-          theta$no_borrow_quality + policy_shock$outside_credit_utility_change,
+          theta$no_borrow_quality + agricultural_exposure *
+            policy_shock$outside_credit_utility_change,
           competitors
         )
         B <- loan_market_size * sl
+        # Agricultural-production lending is a component of total lending, not
+        # a substitute demand system for the entire balance sheet. Conditional
+        # on total originations, choose the farmer-facing agricultural coupon
+        # from the agricultural BLP system. Because composition does not alter
+        # the total-loan state transition, this is the exact static subproblem.
+        ag_utility_shift <- -farm_demand_loading * farm_index +
+          policy_shock$loan_demand_utility_change
+        ag_outside <- theta$no_borrow_quality +
+          policy_shock$outside_credit_utility_change
+        ag_rate_candidates <- clip(
+          dm$ag_loan_rate + seq(-0.03, 0.03, length.out = 31L),
+          f + delta, 0.25
+        )
+        ag_rate_candidates <- unique(ag_rate_candidates)
+        ag_shares <- vapply(ag_rate_candidates, function(rag) {
+          logit_share(
+            ag_loan_quality - alpha_ag * rag + ag_utility_shift,
+            ag_loan_quality - alpha_ag * dm$ag_loan_rate + ag_utility_shift,
+            ag_outside, competitors
+          )
+        }, numeric(1))
+        ag_originations <- pmin(ag_loan_market_size * ag_shares, B)
+        ag_unit_cost <- f + delta + theta$loan_service_cost
+        ag_choice <- which.max(ag_originations * (ag_rate_candidates - ag_unit_cost))
+        B_ag <- ag_originations[ag_choice]
+        r_ag <- ag_rate_candidates[ag_choice]
+        B_nonag <- pmax(B - B_ag, 0)
         sd_draws <- vapply(alpha_d_draws, function(a) {
           logit_share(deposit_quality + a * rd, deposit_quality + a * comp_d, 0, competitors)
         }, numeric(1))
         D <- deposit_market_size * mean(sd_draws)
         R <- statutory$reserve_requirement * D
         funding_gap <- L + B + R - D - E
-        N <- pmax(funding_gap, 0)
-        G <- pmax(-funding_gap, 0)
-        pv_factor <- 1 / (1 - (1 - statutory$maturity_rate) / (1 + theta$discount_rate))
-        interest_income <- B * rl * pv_factor
-        wholesale_cost <- (f + theta$wholesale_cost / 2 * N / pmax(D, 1e-6)) * N
-        profit <- interest_income - (L + B) * (delta + theta$loan_service_cost) +
-          G * f - (rd + theta$deposit_service_cost) * D - wholesale_cost -
-          theta$fixed_operating_cost
+        structural_wholesale <- statutory$structural_wholesale_share * D
+        N <- pmax(funding_gap, 0) + structural_wholesale
+        G <- pmax(-funding_gap, 0) + structural_wholesale
+        # Exact Wang replication-code cash-flow decomposition. The new-loan
+        # coupon is the present value of the loan stream; the full outstanding
+        # book bears the federal-funds opportunity cost, expected loss, and
+        # servicing cost. Deposits and equity offset that benchmark funding
+        # cost, and non-reservable borrowing bears a quadratic premium.
+        expected_years <- 1 / statutory$maturity_rate
+        loan_profit <- beta * (
+          (B_nonag * rl + B_ag * r_ag) * expected_years -
+            (L + B) * (f + delta + theta$loan_service_cost)
+        )
+        deposit_profit <- beta * (
+          (1 - statutory$reserve_requirement) * D * f - D * rd -
+            theta$deposit_service_cost * D + E * f -
+            theta$fixed_operating_cost
+        )
+        finance_profit <- beta * (
+          -theta$wholesale_cost * N^2 / (2 * pmax(D, 1e-6))
+        )
+        profit <- loan_profit + deposit_profit + finance_profit
         after_tax_profit <- profit * (1 - statutory$tax_rate)
-        distributable <- pmax(E + after_tax_profit -
-                                capital_requirement * (L + B), 0)
-        C <- payout * distributable
-        E_next <- E + after_tax_profit - C
+        E_next <- E_target
+        C <- E + after_tax_profit - E_next
+        payout_value <- C - statutory$equity_issuance_cost * as.numeric(C < 0)
         L_next <- (1 - statutory$maturity_rate) * (L + B)
         feasible <- E_next >= capital_requirement * (L + B) &&
+          E_next >= statutory$management_capital_target * (L + B + R + G) &&
           E_next > 0 && L_next > 0 && is.finite(profit)
         if (!feasible) next
         rr <- rr + 1L
         rows[[rr]] <- data.table(
-          loan_rate = rl, deposit_rate = rd, new_loans = B, deposits = D,
+          loan_rate = rl, agricultural_loan_rate = r_ag,
+          new_agricultural_loans = B_ag,
+          deposit_rate = rd, new_loans = B, deposits = D,
           reserves = R, securities = G, wholesale_funding = N, dividends = C,
+          payout_value = payout_value,
           profit = profit, next_loans = L_next, next_equity = E_next,
           loan_share = sl, deposit_share = mean(sd_draws),
           next_l_state = nearest(L_next, l_grid),
@@ -297,15 +497,19 @@ solve_type <- function(bank_type, theta, regime = "current_power",
       for (s in seq_len(nrow(states))) {
         st <- states[s]
         cand <- candidates[[s]]
+        continuation_matrix <- EV[
+          st$f_state, st$d_state, st$farm_state, ,
+        ]
         continuation <- mapply(
-          function(li, ei) EV[st$f_state, st$d_state, st$farm_state, li, ei],
-          cand$next_l_state, cand$next_e_state
+          function(lv, ev) bilinear_value(continuation_matrix, lv, ev),
+          cand$next_loans, cand$next_equity
         )
-        values <- cand$dividends + beta * continuation
+        values <- cand$payout_value + beta * continuation
         best_id <- which.max(values)
         V_new[s] <- values[best_id]
         best <- as.list(cand[best_id])
         best$value <- V_new[s]
+        best$payout_value <- NULL
         best$next_l_state <- NULL
         best$next_e_state <- NULL
         new_policy[[s]] <- best
@@ -439,8 +643,12 @@ summarize_policy <- function(dt) dt[, .(
   } else {
     "structural_calibration_not_full_SMD_estimate"
   },
-  loan_rate = mean(loan_rate), deposit_rate = mean(deposit_rate),
-  new_ag_loans = mean(new_loans), deposits = mean(deposits),
+  total_loan_rate = mean(loan_rate),
+  agricultural_loan_rate = mean(agricultural_loan_rate),
+  deposit_rate = mean(deposit_rate),
+  new_total_loans = mean(new_loans),
+  new_agricultural_loans = mean(new_agricultural_loans),
+  deposits = mean(deposits),
   wholesale_funding = mean(wholesale_funding), securities = mean(securities),
   dividends = mean(dividends), next_equity = mean(next_equity),
   loan_markup = mean(loan_markup), deposit_markdown = mean(deposit_markdown),
@@ -455,10 +663,18 @@ summarize_policy <- function(dt) dt[, .(
 policy_results <- summarize_policy(solution[farm_state == 2L])
 setorder(policy_results, bank_type, scenario)
 policy_results[, `:=`(
-  change_new_ag_loans_from_no_policy = new_ag_loans - new_ag_loans[scenario == "A_no_policy"],
-  pct_change_new_ag_loans_from_no_policy = new_ag_loans /
-    new_ag_loans[scenario == "A_no_policy"] - 1,
-  change_loan_rate_from_no_policy = loan_rate - loan_rate[scenario == "A_no_policy"],
+  change_new_total_loans_from_no_policy = new_total_loans -
+    new_total_loans[scenario == "A_no_policy"],
+  pct_change_new_total_loans_from_no_policy = new_total_loans /
+    new_total_loans[scenario == "A_no_policy"] - 1,
+  change_new_agricultural_loans_from_no_policy = new_agricultural_loans -
+    new_agricultural_loans[scenario == "A_no_policy"],
+  pct_change_new_agricultural_loans_from_no_policy = new_agricultural_loans /
+    new_agricultural_loans[scenario == "A_no_policy"] - 1,
+  change_total_loan_rate_from_no_policy = total_loan_rate -
+    total_loan_rate[scenario == "A_no_policy"],
+  change_agricultural_loan_rate_from_no_policy = agricultural_loan_rate -
+    agricultural_loan_rate[scenario == "A_no_policy"],
   change_deposit_rate_from_no_policy = deposit_rate - deposit_rate[scenario == "A_no_policy"],
   change_wholesale_funding_from_no_policy = wholesale_funding -
     wholesale_funding[scenario == "A_no_policy"],

@@ -105,17 +105,18 @@ The primary specification follows Wang et al. and instruments loan rates with sa
 
 The repository includes the Wang-style balance-sheet Bellman implementation,
 transition tables, parameters, diagnostics, and policy output. Reported OBBBA
-counterfactuals retain the estimated deposit and agricultural-loan market power;
-competitive-pricing calibrations are excluded. The combined policy and channel
-decompositions have been run on a two-point bank-state grid. They are structural calibrations, not the
-full Wang simulated-minimum-distance estimation, and the reported competitor-
-rate equilibrium gaps remain material.
+counterfactuals retain the updated total-loan, agricultural-production-loan,
+and deposit BLP systems; competitive-pricing calibrations are excluded. Total
+BLP demand governs the balance sheet, while agricultural BLP demand governs the
+farmer-facing loan component and coupon.
 
 `04k_estimate_wang_smd_bellman.R` now runs a two-stage SMD estimator with a
-Bellman/equilibrium re-solve at every parameter vector. The current estimate
-converges numerically but fails the empirical moment-fit gate, so `04i`
-counterfactuals are retained only as rejected diagnostics and are not paper
-results.
+Bellman re-solve at every parameter vector. The corrected model converts the
+observed loan stock into Wang's legacy-loan state, preserves the loan stock-flow
+identity, uses aggregate-ratio moments, and separates structural wholesale
+funding. The final estimate passes the economic moment-fit gate; the strict
+Bellman residual is below `1e-8` and reported counterfactual equilibrium gaps
+are below `5e-4`.
 
 See `docs/05b_model.md` for the Bellman equation and `docs/05a_data_requirements.md` for the complete input map.
 

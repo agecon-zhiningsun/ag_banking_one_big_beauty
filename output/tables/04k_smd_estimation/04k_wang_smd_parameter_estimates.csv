@@ -1,8 +1,6 @@
 parameter,estimate,standard_error,lower_95,upper_95,lower_bound,upper_bound,estimation
-discount_rate,0.105082704729021,0.227791337521659,-0.341388316813431,0.551553726271474,0.005,0.15,two_stage_SMD_full_Bellman_equilibrium
-wholesale_cost,0.0180422522048091,0.000559818411106205,0.0169450081190409,0.0191394962905772,1e-04,0.1,two_stage_SMD_full_Bellman_equilibrium
-deposit_service_cost,0.00241893249195753,0.000645851427425405,0.00115306369420374,0.00368480128971132,1e-04,0.08,two_stage_SMD_full_Bellman_equilibrium
-loan_service_cost,0.0317797333472312,0.480956374370278,-0.910894760418514,0.974454227112976,1e-04,0.08,two_stage_SMD_full_Bellman_equilibrium
-fixed_operating_cost,0.000566143411889437,0.278030178136861,-0.544373005736359,0.545505292560137,0,0.08,two_stage_SMD_full_Bellman_equilibrium
-wealth_to_loan_market,43.5760726106213,1.03196397012489e-05,43.5760523841275,43.5760928371151,1,100,two_stage_SMD_full_Bellman_equilibrium
-no_borrow_quality,1.8708934749638,0.449009888131401,0.990834094226252,2.75095285570134,-15,2,two_stage_SMD_full_Bellman_equilibrium
+discount_rate,0.1175,,,,0.005,0.15,two_stage_SMD_full_Bellman_equilibrium
+wholesale_cost,0.01,,,,1e-04,0.1,two_stage_SMD_full_Bellman_equilibrium
+loan_service_cost,0.0337684142540951,,,,1e-04,0.08,two_stage_SMD_full_Bellman_equilibrium
+fixed_operating_cost,5e-04,,,,0,0.08,two_stage_SMD_full_Bellman_equilibrium
+wealth_to_loan_market,0.92,,,,0.02,20,two_stage_SMD_full_Bellman_equilibrium
